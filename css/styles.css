@@ -314,3 +314,16 @@ kbd { background: var(--deep); border: 1px solid var(--yonder); border-radius: 6
   .compare-pick { grid-template-columns: 1fr; }
   .zoom .btn-small { min-width: 44px; }
 }
+
+/* ---------- journey, options, pulse ---------- */
+.journey { background: linear-gradient(135deg, rgba(9, 96, 225, 0.35), rgba(7, 23, 63, 0.9)); border: 2px solid var(--yellow);
+  border-radius: var(--radius); padding: 12px 16px; display: flex; flex-direction: column; gap: 6px; }
+.journey-step { color: var(--yellow); font-weight: 700; font-size: 0.95rem; }
+.journey h3 { font-size: 1.3rem; }
+.journey-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+.options .switch { display: flex; align-items: center; gap: 12px; min-height: 44px; font-weight: 600; cursor: pointer; }
+.options .switch input { width: 24px; height: 24px; accent-color: var(--yonder); }
+.pulse { position: absolute; width: 36px; height: 36px; margin: -18px 0 0 -18px; border-radius: 50%; pointer-events: none;
+  border: 3px solid var(--yellow); box-shadow: 0 0 12px rgba(234, 239, 7, 0.7); opacity: 0; left: 0; top: 0; }
+
+.stage > * { flex-shrink: 0; }

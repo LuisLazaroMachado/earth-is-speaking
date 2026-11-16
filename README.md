@@ -33,6 +33,11 @@ stored in `data/`. The browser never reads NASA files directly.
 | Forest height + Lightning (global views) | `python scripts/prep_global.py` | NASA SVS 4950 (GEDI), SVS 5011 (ISS LIS) |
 | Card images | `python scripts/prep_cards.py` | crops of the layer images |
 
+**Refresh the "Latest on Earth" snapshot** (NASA updates it daily): `python scripts/refresh_latest.py`
+— it downloads the newest frame, shows you the printed date, rebuilds the data and can commit and push.
+
+Live site: https://luislazaromachado.github.io/earth-is-speaking/
+
 Debug images for visual checks are written to `debug/`. Validation numbers for each layer are
 stored in `data/<layer>/meta.json` and shown in the app's About & methods dialog.
 

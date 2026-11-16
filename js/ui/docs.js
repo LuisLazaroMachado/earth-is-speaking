@@ -37,6 +37,10 @@ export function howToHTML() {
       <ul><li>Pulsa <kbd>Tab</kbd> hasta llegar al mapa. Las flechas mueven el cursor 2 grados (con Shift, 10).</li>
       <li><kbd>Enter</kbd> suena el punto. <kbd>W</kbd> dice dónde estás. <kbd>I</kbd> lee el panel completo.</li>
       <li><kbd>H</kbd> abre la lista de atajos.</li></ul>
+      <h3>Recorrido guiado</h3>
+      <p><strong>Empezar el recorrido</strong> te lleva por 8 paradas narradas, de la Antártida a Lima, con su sonido. Usa Siguiente, Atrás o Terminar; la barra espaciadora pausa también la voz.</p>
+      <h3>Opciones</h3>
+      <p>En <strong>Opciones</strong>: vista previa al pasar el ratón (desactivada por defecto), vibración en teléfonos Android y el pulso visual del sonido.</p>
       <h3>Buscar y comparar</h3>
       <p>Escribe un país, ciudad o lugar en el buscador (tecla <kbd>/</kbd>). En un país suenan hasta 24 puntos de oeste a este y luego un resumen. <strong>Comparar</strong> pone dos países lado a lado.</p>
       <h3>Escuchar todo el mundo</h3>
@@ -54,6 +58,10 @@ export function howToHTML() {
     <ul><li>Press <kbd>Tab</kbd> until you reach the map. Arrow keys move the cursor 2 degrees (with Shift, 10).</li>
     <li><kbd>Enter</kbd> plays the point. <kbd>W</kbd> tells you where you are. <kbd>I</kbd> reads the whole panel.</li>
     <li><kbd>H</kbd> opens the list of shortcuts.</li></ul>
+    <h3>Guided journey</h3>
+    <p><strong>Start the journey</strong> takes you through 8 narrated stops, from Antarctica to Lima, with their sound. Use Next, Back or End; the space bar also pauses the voice.</p>
+    <h3>Options</h3>
+    <p>In <strong>Options</strong>: hover preview (off by default), vibration on Android phones and the visual sound pulse.</p>
     <h3>Search and compare</h3>
     <p>Type a country, city or place in the search box (key <kbd>/</kbd>). For a country, up to 24 points play from west to east, then a summary. <strong>Compare</strong> puts two countries side by side.</p>
     <h3>Hear the whole world</h3>

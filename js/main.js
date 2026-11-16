@@ -4,7 +4,7 @@ import { engine } from './core/audio.js';
 import { playSample } from './core/instruments.js';
 import { LAYERS } from './core/layers.js';
 import { MapView } from './views/mapView.js';
-import { speak, lastUtterance, cancelSpeech } from './core/speech.js';
+import { speak, lastUtterance, cancelSpeech, speechAvailable } from './core/speech.js';
 import { initLang, setLang, getLang, t, L, applyI18n, onLangChange, fmtLatLon } from './i18n.js';
 import { CONTENT, CARDS, icon, typeLabel, nextFact } from './content.js';
 import { PLACES, nearestCity } from './data/places.js';
@@ -13,6 +13,7 @@ import { shortcutsHTML, howToHTML, aboutHTML } from './ui/docs.js';
 import geo, { norm } from './core/geo.js';
 import { summarize } from './core/stats.js';
 import { combobox } from './ui/combobox.js';
+import { STOPS, findNear, hottestIn } from './journey.js';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -88,6 +89,7 @@ const view = new MapView($('map'), {
     hideSummary();
     const s = layer().sample(lat, lon);
     playSample(engine, s);
+    feedback(s);
     present(s, { announceIt: true });
   },
   onTap(lat, lon) { view.setTemp({ lat, lon }); },
@@ -95,6 +97,7 @@ const view = new MapView($('map'), {
   onDrag(lat, lon) {
     const s = layer().sample(lat, lon);
     playSample(engine, s, { dur: 0.35, gain: 0.8 });
+    feedback(s);
     present(s, { announceIt: false, rotateFact: false });
   },
   onDragEnd() {
@@ -109,6 +112,7 @@ const view = new MapView($('map'), {
     engine.releaseAll(0.05);
     const s = layer().sample(lat, lon);
     playSample(engine, s, { dur: 0.45 });
+    feedback(s);
     present(s, { announceIt: true, rotateFact: false });
   },
   onActivate(lat, lon) {
@@ -116,6 +120,7 @@ const view = new MapView($('map'), {
     hideSummary();
     const s = layer().sample(lat, lon);
     playSample(engine, s);
+    feedback(s);
     view.setTemp({ lat, lon });
     present(s, { announceIt: true });
   },
@@ -231,10 +236,10 @@ function markCurrentCard() {
   });
 }
 
-export async function selectLayer(id, { latest = false, quiet = false } = {}) {
+export async function selectLayer(id, { latest = false, quiet = false, keepRuns = false } = {}) {
   const L1 = LAYERS[id];
   if (!L1) { announce(`${layerName(id)}. ${t('layer_soon')}`); return false; }
-  engine.stopAll();
+  if (keepRuns) engine.releaseAll(0.1); else engine.stopAll();
   const wasGlobal = layer().view === 'global';
   state.layerId = id;
   state.latest = latest;
@@ -275,7 +280,15 @@ function updatePlayButton() {
 
 export function togglePause() {
   engine.ensure();
-  if (engine.paused) { engine.resume(); announce(t('resumed')); } else { engine.pause(); announce(t('paused')); }
+  if (engine.paused) {
+    engine.resume();
+    if (speechAvailable()) window.speechSynthesis.resume();
+    announce(t('resumed'));
+  } else {
+    engine.pause();
+    if (speechAvailable()) window.speechSynthesis.pause();
+    announce(t('paused'));
+  }
   updatePlayButton();
 }
 
@@ -283,6 +296,7 @@ export function stopAll() {
   engine.stopAll();
   cancelSpeech();
   engine.resume();
+  if (journey.active) endJourney(false);
   view.setSweep(null);
   updatePlayButton();
   announce(t('stopped'));
@@ -700,6 +714,215 @@ document.addEventListener('keydown', (e) => {
 // ---------------------------------------------------------------------------------
 // Wiring
 // ---------------------------------------------------------------------------------
+// ---------------------------------------------------------------------------------
+// Options: hover preview, vibration (Android), visual sound pulse
+// ---------------------------------------------------------------------------------
+const opts = {
+  hover: store.get('opt.hover', false),
+  vibration: store.get('opt.vibration', true),
+  pulse: store.get('opt.pulse', true),
+};
+const canVibrate = typeof navigator.vibrate === 'function';
+
+function applyOptions() {
+  view.hoverEnabled = opts.hover && !state.audioOnly;
+  $('opt-hover').checked = opts.hover;
+  $('opt-hover').disabled = !!state.audioOnly;
+  $('opt-vibration').checked = opts.vibration;
+  $('opt-vibration-row').hidden = !canVibrate;
+  $('opt-pulse').checked = opts.pulse;
+}
+['hover', 'vibration', 'pulse'].forEach((k) => {
+  $(`opt-${k}`).addEventListener('change', (e) => { opts[k] = e.target.checked; store.set(`opt.${k}`, opts[k]); applyOptions(); });
+});
+
+/** Normalized 0..1 value of a sample (used for vibration length), or null when silent. */
+function normOf(s) {
+  if (!audible(s)) return null;
+  switch (s.layer) {
+    case 'air': return s.norm;
+    case 'lights': return s.strength;
+    case 'ocean': return s.intensity;
+    case 'aero': return s.intensity;
+    case 'forest': return s.height;
+    case 'lightning': return s.density;
+    default: return null;
+  }
+}
+
+let pulsePoint = null;
+/** Vibration (10-60 ms by value) and the visual pulse position for a played sample. */
+function feedback(s) {
+  pulsePoint = { lat: s.lat, lon: s.lon };
+  const n = normOf(s);
+  if (n === null || !opts.vibration || !canVibrate) return;
+  try { navigator.vibrate(Math.round(10 + 50 * n)); } catch (e) { /* not allowed */ }
+}
+
+const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+(function pulseLoop() {
+  const el = $('pulse');
+  const lvl = opts.pulse && pulsePoint ? engine.level() : 0;
+  if (lvl > 0.02) {
+    const r = view.canvas.getBoundingClientRect();
+    const dpr = view.canvas.width / (r.width || 1);
+    const { x, y } = view.toXY(pulsePoint.lat, pulsePoint.lon);
+    el.style.left = `${x / dpr}px`;
+    el.style.top = `${y / dpr}px`;
+    el.style.opacity = String(Math.min(1, 0.35 + lvl));
+    el.style.transform = reducedMotion.matches ? 'none' : `scale(${1 + lvl * 0.9})`;
+    el.style.filter = reducedMotion.matches ? `brightness(${0.7 + lvl})` : 'none';
+  } else el.style.opacity = '0';
+  requestAnimationFrame(pulseLoop);
+})();
+
+// ---------------------------------------------------------------------------------
+// Guided journey
+// ---------------------------------------------------------------------------------
+const journey = { active: false, i: 0, run: null };
+const CALM = (s) => s.level === 'weak';
+
+/** Wait ms of unpaused time; resolves false if the run was cancelled. */
+async function pwait(ms, run) {
+  let left = ms;
+  while (left > 0) {
+    if (run.cancelled) return false;
+    await sleep(50);
+    if (!engine.paused) left -= 50;
+  }
+  return !run.cancelled;
+}
+
+async function narrate(text, run) {
+  if (!speechAvailable()) announce(text);
+  const words = text.split(/\s+/).length;
+  // wait for the voice (or a safe estimate if the browser never reports the end), and always
+  // leave a minimum reading time for people who read the text instead of hearing it
+  await Promise.all([
+    Promise.race([speak(text, getLang()), pwait(1500 + words * 480, run)]),
+    pwait(800 + words * 120, run),
+  ]);
+  return !run.cancelled;
+}
+
+function renderJourney() {
+  const stop = STOPS[journey.i];
+  $('journey').hidden = !journey.active;
+  if (!journey.active) return;
+  $('journey-step').textContent = t('journey_stop', { n: journey.i + 1, total: STOPS.length });
+  $('journey-h').textContent = L(stop.title);
+  $('journey-text').textContent = L(stop.text);
+  $('j-back').disabled = journey.i === 0;
+}
+
+async function playPart(part, pt, run, seconds) {
+  const L1 = LAYERS[part.layer];
+  if (part.path) {
+    const n = 12;
+    for (let k = 0; k < n; k++) {
+      const f = k / (n - 1);
+      const lat = part.path.lat + (pt.lat - part.path.lat) * f;
+      const lon = part.path.lon + (pt.lon - part.path.lon) * f;
+      const s = L1.sample(lat, lon);
+      view.setCursor(lat, lon);
+      playSample(engine, s, { dur: 0.6 });
+      feedback(s);
+      present(s, { announceIt: false, rotateFact: false });
+      if (!(await pwait(650, run))) return false;
+    }
+    present(pt.s, { announceIt: false });
+    view.setCursor(pt.lat, pt.lon);
+    playSample(engine, pt.s);
+    return pwait(2600, run);
+  }
+  const tap = { air: 2.5, lights: 1.2, ocean: 3, aero: 2.5, forest: 2.5, lightning: 2.5 }[part.layer] || 2.5;
+  let left = seconds * 1000;
+  while (left > 0) {
+    playSample(engine, pt.s, { dur: tap });
+    feedback(pt.s);
+    const step = tap * 1000 + 350;
+    if (!(await pwait(step, run))) return false;
+    left -= step;
+  }
+  return true;
+}
+
+async function goStop(i) {
+  if (journey.run) journey.run.cancel();
+  engine.stopAll();
+  cancelSpeech();
+  journey.i = i;
+  journey.active = true;
+  const run = startRun();
+  journey.run = run;
+  renderJourney();
+  const stop = STOPS[i];
+  for (let k = 0; k < stop.parts.length; k++) {
+    const part = stop.parts[k];
+    await selectLayer(part.layer, { quiet: true, keepRuns: true });
+    if (run.cancelled) return;
+    const L1 = LAYERS[part.layer];
+    const pt = part.hottestIn ? hottestIn(L1, part.hottestIn) : findNear(L1, part.at, part.find, part.radius);
+    hideSummary();
+    view.setOutline(null);
+    if (k === 0 && !(await narrateAt(stop, part, pt, run))) return;
+    if (!pt) {
+      if (!(await narrate(t('journey_none'), run))) return;
+      continue;
+    }
+    if (part.calmNote && CALM(pt.s) && !(await narrate(t('journey_calm'), run))) return;
+    if (!(await playPart(part, pt, run, stop.parts.length > 1 ? 5 : 8.5))) return;
+  }
+  engine.sequences.delete(run);
+  if (!(await pwait(1200, run))) return;
+  if (i < STOPS.length - 1) goStop(i + 1);
+  else endJourney(true);
+}
+
+/** Move the view to the stop's point, show it, then speak the narration. */
+async function narrateAt(stop, part, pt, run) {
+  const L1 = LAYERS[part.layer];
+  const target = pt || part.at || { lat: 0, lon: 0 };
+  if (L1.view !== 'global') {
+    if (part.path) view.resetView();
+    else view.fitBounds(target.lon - 18, target.lat - 12, target.lon + 18, target.lat + 12);
+  }
+  view.setCursor(target.lat, target.lon);
+  view.setTemp({ lat: target.lat, lon: target.lon });
+  const s = pt ? pt.s : L1.sample(target.lat, target.lon);
+  present(s, { announceIt: false });
+  return narrate(`${L(stop.title)}. ${L(stop.text)}`, run);
+}
+
+export async function startJourney(from = 0) {
+  engine.ensure();
+  engine.resume();
+  if (state.screen !== 'explorer') await showExplorer({ focusMap: false });
+  $('journey').hidden = false;
+  goStop(from);
+  $('j-next').focus();
+}
+
+function endJourney(finished) {
+  if (journey.run) journey.run.cancel();
+  journey.active = false;
+  renderJourney();
+  if (finished) {
+    speak(t('journey_done'), getLang());
+    announce(t('journey_done'));
+    $('map').focus();
+  }
+}
+
+$('j-next').addEventListener('click', () => goStop(Math.min(STOPS.length - 1, journey.i + 1)));
+$('j-back').addEventListener('click', () => goStop(Math.max(0, journey.i - 1)));
+$('j-end').addEventListener('click', () => { engine.stopAll(); cancelSpeech(); endJourney(false); $('map').focus(); });
+$('btn-journey').addEventListener('click', () => startJourney(0));
+$('btn-journey2').addEventListener('click', () => startJourney(0));
+$('btn-options').addEventListener('click', () => openDialog('dlg-options'));
+onLangChange(() => renderJourney());
+applyOptions();
+
 $('btn-start').addEventListener('click', () => showExplorer());
 $('btn-test').addEventListener('click', testSound);
 $('btn-how').addEventListener('click', () => openDialog('dlg-how'));

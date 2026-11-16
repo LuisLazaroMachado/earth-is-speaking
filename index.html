@@ -35,7 +35,7 @@
       <p class="hero-tag" data-i18n="tagline">Touch the Earth. Hear what it says.</p>
       <button type="button" id="btn-start" class="btn btn-hero" data-i18n="start">Start listening</button>
       <div class="welcome-actions">
-        <button type="button" id="btn-journey" class="btn" data-i18n="journey" hidden>Start the journey</button>
+        <button type="button" id="btn-journey" class="btn" data-i18n="journey">Start the journey</button>
         <button type="button" id="btn-audio-only" class="btn btn-secondary" data-i18n="audio_only" hidden>Audio-only mode</button>
         <button type="button" id="btn-test" class="btn btn-secondary" aria-describedby="test-desc" data-i18n="test_sound">Play a test sound</button>
         <button type="button" id="btn-how" class="link-btn" data-i18n="how_to">How to listen</button>
@@ -59,6 +59,7 @@
           <button type="button" data-lang="en" lang="en">EN</button>
           <button type="button" data-lang="es" lang="es">ES</button>
         </div>
+        <button type="button" class="btn btn-secondary btn-small" id="btn-options" data-i18n="options">Options</button>
         <button type="button" class="btn btn-secondary btn-small" id="btn-about" data-i18n="about">About &amp; methods</button>
         <button type="button" class="btn btn-secondary btn-small" id="btn-help" data-i18n="help">Help</button>
       </div>
@@ -84,6 +85,7 @@
             <button type="button" class="btn btn-secondary btn-small" id="btn-compare" data-i18n="compare">Compare</button>
           </div>
           <button type="button" class="btn btn-secondary btn-small" id="btn-surprise" data-i18n="surprise">Surprise me</button>
+          <button type="button" class="btn btn-small" id="btn-journey2" data-i18n="journey">Start the journey</button>
           <span class="toolbar-spacer"></span>
           <div class="zoom" role="group" data-i18n-attr="aria-label:zoom_group">
             <button type="button" class="btn btn-secondary btn-small icon-btn" id="btn-zoom-in" data-i18n-attr="aria-label:zoom_in;title:zoom_in">+</button>
@@ -93,8 +95,19 @@
           <p id="search-status" class="sr-only" aria-live="polite"></p>
         </div>
         <p id="latest-banner" class="latest-banner" hidden></p>
+        <section id="journey" class="journey" aria-labelledby="journey-h" hidden>
+          <p class="journey-step" id="journey-step"></p>
+          <h3 id="journey-h"></h3>
+          <p id="journey-text"></p>
+          <div class="journey-actions">
+            <button type="button" class="btn btn-secondary btn-small" id="j-back" data-i18n="back">Back</button>
+            <button type="button" class="btn btn-small" id="j-next" data-i18n="next">Next</button>
+            <button type="button" class="btn btn-secondary btn-small" id="j-end" data-i18n="journey_end_btn">End the journey</button>
+          </div>
+        </section>
         <div id="map" class="map" tabindex="0" role="application" aria-describedby="map-help">
           <canvas></canvas>
+          <div class="pulse" id="pulse" aria-hidden="true"></div>
           <p class="map-error" id="map-error" hidden data-i18n="img_error"></p>
         </div>
         <p id="map-help" class="map-help" data-i18n="map_help"></p>
@@ -176,6 +189,18 @@
     <div class="dlg-head"><h2 id="dlg-about-h" data-i18n="about">About &amp; methods</h2>
       <button type="button" class="btn btn-secondary btn-small" data-close data-i18n="close">Close</button></div>
     <div class="dlg-body" id="dlg-about-body"></div>
+  </dialog>
+
+  <dialog id="dlg-options" aria-labelledby="dlg-options-h">
+    <div class="dlg-head"><h2 id="dlg-options-h" data-i18n="options">Options</h2>
+      <button type="button" class="btn btn-secondary btn-small" data-close data-i18n="close">Close</button></div>
+    <div class="dlg-body options">
+      <label class="switch"><input type="checkbox" id="opt-hover"> <span data-i18n="hover">Hover preview</span></label>
+      <p class="hint" data-i18n="hover_desc"></p>
+      <label class="switch" id="opt-vibration-row"><input type="checkbox" id="opt-vibration"> <span data-i18n="vibration">Vibration</span></label>
+      <label class="switch"><input type="checkbox" id="opt-pulse"> <span data-i18n="pulse">Show sound pulse</span></label>
+      <p class="hint" data-i18n="pulse_desc"></p>
+    </div>
   </dialog>
 
   <dialog id="dlg-compare" aria-labelledby="dlg-compare-h">
