@@ -4,28 +4,162 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Earth Is Speaking</title>
+  <meta name="description" content="Listen to our planet: an accessible web app that turns NASA Earth data into sound. Touch the Earth. Hear what it says.">
+  <meta name="theme-color" content="#07173F">
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Ccircle cx='16' cy='16' r='14' fill='%230960E1'/%3E%3Cpath d='M6 16c3-5 6-5 9 0s6 5 11 0' stroke='%23EAEF07' stroke-width='3' fill='none' stroke-linecap='round'/%3E%3C/svg%3E">
   <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-  <main id="main">
-    <h1>Earth Is Speaking</h1>
-    <p>Air temperature. Click or tap the map to hear it. Hold and drag to play it like a piano.
-       Keyboard: focus the map, arrows move the cursor (Shift = 10°), Enter plays.</p>
-    <div id="map" class="map" tabindex="0" role="application"
-         aria-label="World map, air temperature" aria-describedby="map-help">
-      <canvas></canvas>
+  <a class="skip-link" id="skip-link" href="#main-welcome" data-i18n="skip">Skip to main content</a>
+  <div id="live" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+
+  <!-- ============================ WELCOME ============================ -->
+  <div id="welcome" class="welcome">
+    <div class="stars" aria-hidden="true"></div>
+    <header class="welcome-top">
+      <div class="brand-nasa">
+        <!-- put NASA logo image here (PNG/JPG) -->
+        <span class="nasa-slot" aria-hidden="true"></span>
+        <span data-i18n="data_nasa">Data: NASA</span>
+      </div>
+      <div class="lang-switch" role="group" data-i18n-attr="aria-label:language">
+        <button type="button" data-lang="en" lang="en">EN</button>
+        <button type="button" data-lang="es" lang="es">ES</button>
+      </div>
+    </header>
+    <main id="main-welcome" class="welcome-main" tabindex="-1">
+      <p data-i18n="intro_sr" class="sr-only"></p>
+      <div class="planet" id="planet" aria-hidden="true"></div>
+      <h1 class="hero-title" data-i18n="title">Earth Is Speaking</h1>
+      <p class="hero-sub" data-i18n="subtitle">Listen to our planet</p>
+      <p class="hero-tag" data-i18n="tagline">Touch the Earth. Hear what it says.</p>
+      <button type="button" id="btn-start" class="btn btn-hero" data-i18n="start">Start listening</button>
+      <div class="welcome-actions">
+        <button type="button" id="btn-journey" class="btn" data-i18n="journey" hidden>Start the journey</button>
+        <button type="button" id="btn-audio-only" class="btn btn-secondary" data-i18n="audio_only" hidden>Audio-only mode</button>
+        <button type="button" id="btn-test" class="btn btn-secondary" aria-describedby="test-desc" data-i18n="test_sound">Play a test sound</button>
+        <button type="button" id="btn-how" class="link-btn" data-i18n="how_to">How to listen</button>
+      </div>
+      <p id="test-desc" class="hint" data-i18n="test_desc"></p>
+    </main>
+    <footer class="welcome-foot"><p data-i18n="not_endorsed"></p></footer>
+  </div>
+
+  <!-- ============================ EXPLORER ============================ -->
+  <div id="explorer" class="explorer" hidden>
+    <header class="topbar">
+      <div class="brand">
+        <!-- put NASA logo image here (PNG/JPG) -->
+        <span class="nasa-slot small" aria-hidden="true"></span>
+        <h1 class="app-name" data-i18n="title">Earth Is Speaking</h1>
+        <span class="data-nasa" data-i18n="data_nasa">Data: NASA</span>
+      </div>
+      <div class="top-actions">
+        <div class="lang-switch" role="group" data-i18n-attr="aria-label:language">
+          <button type="button" data-lang="en" lang="en">EN</button>
+          <button type="button" data-lang="es" lang="es">ES</button>
+        </div>
+        <button type="button" class="btn btn-secondary btn-small" id="btn-about" data-i18n="about">About &amp; methods</button>
+        <button type="button" class="btn btn-secondary btn-small" id="btn-help" data-i18n="help">Help</button>
+      </div>
+    </header>
+
+    <div class="layout">
+      <nav class="layer-nav" aria-labelledby="layers-h">
+        <h2 id="layers-h" class="nav-title" data-i18n="choose_layer">Choose what to listen to</h2>
+        <ul id="cards" class="cards"></ul>
+      </nav>
+
+      <main id="main" class="stage" tabindex="-1" aria-labelledby="stage-h">
+        <h2 id="stage-h" class="sr-only"></h2>
+        <div class="stage-toolbar">
+          <div class="view-switch" id="view-switch" role="group"></div>
+          <div id="search-slot"></div>
+          <span class="toolbar-spacer"></span>
+          <button type="button" class="btn btn-secondary btn-small" id="btn-surprise" data-i18n="surprise">Surprise me</button>
+        </div>
+        <p id="latest-banner" class="latest-banner" hidden></p>
+        <div id="map" class="map" tabindex="0" role="application" aria-describedby="map-help">
+          <canvas></canvas>
+          <p class="map-error" id="map-error" hidden data-i18n="img_error"></p>
+        </div>
+        <p id="map-help" class="map-help" data-i18n="map_help"></p>
+        <p class="sound-line" aria-hidden="true"><span class="label" data-i18n="sound_desc">Sound</span><span id="sound-desc"></span></p>
+        <p class="credit-line" id="map-credit"></p>
+      </main>
+
+      <aside id="panel" class="panel" aria-labelledby="panel-h">
+        <button type="button" class="sheet-handle" id="sheet-handle" aria-expanded="false" aria-controls="panel-body">
+          <span id="sheet-handle-text" data-i18n="open_panel">Show details</span>
+        </button>
+        <h2 id="panel-h" data-i18n="panel_title">What you hear</h2>
+        <div id="panel-body">
+          <div class="phrase-row"><span id="p-icon"></span><p id="p-phrase" class="phrase" data-i18n="panel_empty"></p></div>
+          <p id="p-place" class="place"></p>
+          <section class="dyk" aria-labelledby="dyk-h" id="p-dyk" hidden>
+            <h3 id="dyk-h" data-i18n="did_you_know">Did you know?</h3>
+            <p id="p-fact"></p>
+          </section>
+          <details class="details" id="p-details">
+            <summary data-i18n="see_data">See the data</summary>
+            <dl>
+              <dt data-i18n="value">Value</dt><dd id="d-value">—</dd>
+              <dt data-i18n="range">Range</dt><dd id="d-range"></dd>
+              <dt data-i18n="date">Date</dt><dd id="d-date"></dd>
+              <dt data-i18n="source">Source</dt><dd id="d-source"></dd>
+              <dt data-i18n="type_label">Data type</dt><dd id="d-type"></dd>
+            </dl>
+            <h3 data-i18n="why_matters">Why it matters</h3>
+            <p id="d-matters"></p>
+            <h3 data-i18n="why_sounds">Why it sounds this way</h3>
+            <p id="d-sounds"></p>
+          </details>
+        </div>
+      </aside>
     </div>
-    <p id="map-help" class="sr-only">Arrow keys move the cursor 2 degrees, Shift plus arrow moves 10 degrees. Enter plays the point.</p>
-    <div class="controls">
-      <button id="play" type="button">Pause</button>
-      <button id="stop" type="button">Stop</button>
-      <label>Volume <input id="vol" type="range" min="0" max="100" value="60"></label>
-      <button id="scale" type="button">Hear the scale</button>
+
+    <div class="controlbar" role="region" id="controlbar" data-i18n-attr="aria-label:controls">
+      <div class="group">
+        <button type="button" class="btn btn-small" id="btn-play" data-i18n="pause">Pause</button>
+        <button type="button" class="btn btn-secondary btn-small" id="btn-stop" data-i18n="stop">Stop</button>
+      </div>
+      <div class="group">
+        <label for="vol" data-i18n="volume">Volume</label>
+        <input type="range" id="vol" min="0" max="100" step="5" value="60">
+      </div>
+      <fieldset class="speed">
+        <legend data-i18n="speed">Speed</legend>
+        <span class="opts">
+          <input type="radio" name="speed" id="sp-slow" value="slow"><label for="sp-slow" data-i18n="slow">Slow</label>
+          <input type="radio" name="speed" id="sp-normal" value="normal" checked><label for="sp-normal" data-i18n="normal">Normal</label>
+          <input type="radio" name="speed" id="sp-fast" value="fast"><label for="sp-fast" data-i18n="fast">Fast</label>
+        </span>
+      </fieldset>
+      <div class="group">
+        <button type="button" class="btn btn-secondary btn-small" id="btn-scale" data-i18n="hear_scale">Hear the scale</button>
+        <button type="button" class="btn btn-secondary btn-small" id="btn-sweep" data-i18n="sweep">Landscape sweep</button>
+      </div>
+      <span class="spacer"></span>
     </div>
-    <p id="value" aria-live="polite"></p>
-    <p id="sound"></p>
-    <p id="date"></p>
-  </main>
-  <script type="module" src="js/stage1.js"></script>
+  </div>
+
+  <!-- ============================ DIALOGS ============================ -->
+  <dialog id="dlg-how" aria-labelledby="dlg-how-h">
+    <div class="dlg-head"><h2 id="dlg-how-h" data-i18n="how_to">How to listen</h2>
+      <button type="button" class="btn btn-secondary btn-small" data-close data-i18n="close">Close</button></div>
+    <div class="dlg-body" id="dlg-how-body"></div>
+  </dialog>
+  <dialog id="dlg-help" aria-labelledby="dlg-help-h">
+    <div class="dlg-head"><h2 id="dlg-help-h" data-i18n="shortcuts">Keyboard shortcuts</h2>
+      <button type="button" class="btn btn-secondary btn-small" data-close data-i18n="close">Close</button></div>
+    <div class="dlg-body" id="dlg-help-body"></div>
+  </dialog>
+  <dialog id="dlg-about" aria-labelledby="dlg-about-h">
+    <div class="dlg-head"><h2 id="dlg-about-h" data-i18n="about">About &amp; methods</h2>
+      <button type="button" class="btn btn-secondary btn-small" data-close data-i18n="close">Close</button></div>
+    <div class="dlg-body" id="dlg-about-body"></div>
+  </dialog>
+
+  <script type="module" src="js/main.js"></script>
 </body>
 </html>
