@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Earth Is Speaking</title>
+  <link rel="stylesheet" href="css/styles.css">
+</head>
+<body>
+  <main id="main">
+    <h1>Earth Is Speaking</h1>
+    <p>Air temperature. Click or tap the map to hear it. Hold and drag to play it like a piano.
+       Keyboard: focus the map, arrows move the cursor (Shift = 10°), Enter plays.</p>
+    <div id="map" class="map" tabindex="0" role="application"
+         aria-label="World map, air temperature" aria-describedby="map-help">
+      <canvas></canvas>
+    </div>
+    <p id="map-help" class="sr-only">Arrow keys move the cursor 2 degrees, Shift plus arrow moves 10 degrees. Enter plays the point.</p>
+    <div class="controls">
+      <button id="play" type="button">Pause</button>
+      <button id="stop" type="button">Stop</button>
+      <label>Volume <input id="vol" type="range" min="0" max="100" value="60"></label>
+      <button id="scale" type="button">Hear the scale</button>
+    </div>
+    <p id="value" aria-live="polite"></p>
+    <p id="sound"></p>
+    <p id="date"></p>
+  </main>
+  <script type="module" src="js/stage1.js"></script>
+</body>
+</html>

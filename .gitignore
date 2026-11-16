@@ -13,3 +13,7 @@ __pycache__/
 .DS_Store
 Thumbs.db
 .vscode/
+
+# Dev tools (headless browser tests)
+tools/node_modules/
+tools/shot_*.png

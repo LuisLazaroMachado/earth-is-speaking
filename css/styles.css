@@ -1,0 +1,7 @@
+body { background: #07173F; color: #fff; font: 18px/1.5 system-ui, sans-serif; margin: 0; padding: 16px; }
+.map { width: 100%; max-width: 1200px; }
+.map canvas { display: block; width: 100%; aspect-ratio: 2 / 1; touch-action: none; cursor: crosshair; }
+.map:focus-visible { outline: 4px solid #EAEF07; outline-offset: 2px; }
+button, input { font: inherit; min-height: 44px; }
+.controls { display: flex; flex-wrap: wrap; gap: 12px; margin: 12px 0; align-items: center; }
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
