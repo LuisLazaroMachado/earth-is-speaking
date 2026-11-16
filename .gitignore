@@ -17,3 +17,4 @@ Thumbs.db
 # Dev tools (headless browser tests)
 tools/node_modules/
 tools/shot_*.png
+tools/downloads-*/

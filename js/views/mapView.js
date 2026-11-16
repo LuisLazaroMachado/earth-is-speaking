@@ -247,7 +247,7 @@ export class MapView {
       ctx.fillRect(x - 1.5 * dpr, 0, 3 * dpr, H);
     }
 
-    this.markers.forEach((m, i) => this._pin(m, String(i + 1), dpr, '#0960E1'));
+    this.markers.forEach((m, i) => this._pin(m, String(m.n ?? i + 1), dpr, '#0960E1'));
     if (this.temp) this._pin(this.temp, '', dpr, '#FFFFFF');
 
     if (this.cursor.visible) {

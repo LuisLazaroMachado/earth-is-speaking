@@ -14,6 +14,7 @@ const SHORTCUTS = [
   [['I'], 'Read the whole information panel', 'Leer todo el panel de información'],
   [['R'], 'Repeat the last spoken message', 'Repetir el último mensaje hablado'],
   [['V'], 'Speak a place or a command (Google Chrome)', 'Decir un lugar o un comando (Google Chrome)'],
+  [['P'], 'Play My Earth Song', 'Reproducir Mi canción de la Tierra'],
   [['H'], 'Open this list of shortcuts', 'Abrir esta lista de atajos'],
   [['Esc'], 'Close a dialog', 'Cerrar un diálogo'],
 ];
@@ -38,6 +39,8 @@ export function howToHTML() {
       <ul><li>Pulsa <kbd>Tab</kbd> hasta llegar al mapa. Las flechas mueven el cursor 2 grados (con Shift, 10).</li>
       <li><kbd>Enter</kbd> suena el punto. <kbd>W</kbd> dice dónde estás. <kbd>I</kbd> lee el panel completo.</li>
       <li><kbd>H</kbd> abre la lista de atajos.</li></ul>
+      <h3>Mi canción de la Tierra</h3>
+      <p>Pulsa <strong>Añadir marcador</strong> (o <kbd>Enter</kbd> en el mapa) para guardar lugares de cualquier capa, hasta 100. Reprodúcelos en orden, de izquierda a derecha o todos juntos, comparte la lista con un enlace o descárgala como audio. <strong>Compartir este lugar</strong> crea una postal sonora; quien la recibe puede responder con su propio lugar.</p>
       <h3>Voz y modo solo audio</h3>
       <p>En Google Chrome, pulsa el micrófono o la tecla <kbd>V</kbd> y di un lugar ("Lima", "Japón") o un comando ("sorpréndeme", "más fuerte", "dónde estoy", "siguiente capa", "ayuda"). El <strong>modo solo audio</strong> hace que la app diga todo en voz alta, para usarla sin mirar. Si ya usas un lector de pantalla, quizá no lo necesites.</p>
       <h3>Recorrido guiado</h3>
@@ -61,6 +64,8 @@ export function howToHTML() {
     <ul><li>Press <kbd>Tab</kbd> until you reach the map. Arrow keys move the cursor 2 degrees (with Shift, 10).</li>
     <li><kbd>Enter</kbd> plays the point. <kbd>W</kbd> tells you where you are. <kbd>I</kbd> reads the whole panel.</li>
     <li><kbd>H</kbd> opens the list of shortcuts.</li></ul>
+    <h3>My Earth Song</h3>
+    <p>Press <strong>Add marker</strong> (or <kbd>Enter</kbd> on the map) to keep places from any layer, up to 100. Play them in order, from left to right or all together, share the list with a link or download it as audio. <strong>Share this place</strong> makes a sound postcard; whoever receives it can answer with their own place.</p>
     <h3>Voice and audio-only mode</h3>
     <p>In Google Chrome, press the microphone or the <kbd>V</kbd> key and say a place ("Lima", "Japan") or a command ("surprise me", "louder", "where am I", "next layer", "help"). <strong>Audio-only mode</strong> makes the app say everything aloud, so you can use it without looking. If you already use a screen reader, you may not need it.</p>
     <h3>Guided journey</h3>

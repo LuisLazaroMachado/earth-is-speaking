@@ -15,6 +15,7 @@ import { summarize } from './core/stats.js';
 import { combobox } from './ui/combobox.js';
 import { STOPS, findNear, hottestIn } from './journey.js';
 import { voiceSupported, listenOnce, parseUtterance, VOICE_HELP } from './voice.js';
+import { createSong, parseHash } from './song.js';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -95,7 +96,7 @@ const view = new MapView($('map'), {
     feedback(s);
     present(s, { announceIt: true });
   },
-  onTap(lat, lon) { view.setTemp({ lat, lon }); },
+  onTap(lat, lon) { view.setTemp({ lat, lon }); state.tempName = ''; },
   onDragStart() { engine.releaseAll(0.05); },
   onDrag(lat, lon) {
     const s = layer().sample(lat, lon);
@@ -125,7 +126,9 @@ const view = new MapView($('map'), {
     playSample(engine, s);
     feedback(s);
     view.setTemp({ lat, lon });
+    state.tempName = '';
     present(s, { announceIt: true });
+    songApi.add({ layer: state.layerId, lat, lon });
   },
 });
 
@@ -269,6 +272,7 @@ export async function selectLayer(id, { latest = false, quiet = false, keepRuns 
     showSummary(pl, summarize(L1, geo.pixelsOf(pl.id, { coastal: !!L1.coastal })));
   } else hideSummary();
   if (state.audioOnly) engine.tick();
+  if (typeof songApi !== 'undefined') songApi.updateMap();
   if (!quiet) announce(t('layer_now', { layer: layerName(id) }) + (latest && L1.meta ? `. ${t('latest_label')}: ${L1.meta.frame_label}` : ''));
   return true;
 }
@@ -451,6 +455,7 @@ export async function choosePlace(item) {
   const d = Math.max(3, (p.r / 111) * 3);
   view.fitBounds(p.lon - d * 1.5, p.lat - d, p.lon + d * 1.5, p.lat + d);
   const s = goTo(p.lat, p.lon, { placeText: p.kind === 'city' ? t('small_area', { place: L(p) }) : L(p) });
+  state.tempName = L(p);
   announce(`${t('voice_going', { place: L(p) })}. ${summaryLine(s)}`);
   return s;
 }
@@ -463,6 +468,8 @@ export async function hearCountry(country, { fly = true } = {}) {
   if (!L1.place) { announce(t('no_place_layer')); return null; }
   const outlines = await geo.loadOutlines();
   view.setOutline(outlines[country.id]);
+  view.setTemp({ lat: country.ly, lon: country.lx });
+  state.tempName = L(country);
   if (fly) {
     const [a, b, c, d] = country.bbox;
     if (c - a > 180) view.resetView(); else view.fitBounds(a, b, c, d);
@@ -561,6 +568,7 @@ function surprise() {
   view.setOutline(null);
   view.fitBounds(p.lon - 6, p.lat - 4, p.lon + 6, p.lat + 4);
   const s = goTo(p.lat, p.lon, { placeText: L(p) });
+  state.tempName = L(p);
   const msg = `${t('voice_surprise', { place: L(p) })} ${content().phrase(s)}`;
   announce(msg);
 }
@@ -718,6 +726,7 @@ document.addEventListener('keydown', (e) => {
   else if (k === 'i' || k === 'I') readPanel();
   else if (k === 'r' || k === 'R') speak(lastUtterance(), getLang());
   else if (k === 'v' || k === 'V') voiceFlow();
+  else if (k === 'p' || k === 'P') songApi.playAll();
   else if (k === '/') { e.preventDefault(); $('search').focus(); }
   else if ((k === '+' || k === '=') && e.target !== $('map')) view.zoomBy(2);
   else if ((k === '-' || k === '_') && e.target !== $('map')) view.zoomBy(0.5);
@@ -1057,7 +1066,53 @@ $('btn-audio-only').addEventListener('click', async () => {
 onLangChange(() => renderAudioOnly());
 renderAudioOnly();
 
-$('btn-start').addEventListener('click', () => showExplorer());
+// ---------------------------------------------------------------------------------
+// My Earth Song, share links and sound postcards
+// ---------------------------------------------------------------------------------
+var songApi = createSong({
+  $, t, L, LAYERS, engine, playSample, announce, say, getLang, state, view, CONTENT,
+  placeOf, layerName, selectLayer, goTo, layer: () => layer(),
+  /** The temporary marker (or the place just searched) as {layer, lat, lon, name}. */
+  currentPlace: () => (view.temp ? { layer: state.layerId, lat: view.temp.lat, lon: view.temp.lon, name: state.tempName || '' } : null),
+});
+
+const shared = parseHash(location.hash, CARD_ORDER);
+if (shared.lang) setLang(shared.lang);
+if (shared.markers.length) songApi.song.markers = shared.markers.map((m) => ({ ...m, name: m.name || layerName(m.layer) }));
+if (shared.postcard.length) songApi.song.postcardFrom = shared.postcard[shared.postcard.length - 1];
+function renderShared() {
+  const box = $('welcome-share');
+  box.hidden = !shared.markers.length && !shared.postcard.length;
+  if (shared.postcard.length) box.textContent = t('postcard_from', { places: shared.postcard.map((p) => p.name || layerName(p.layer)).join(' + ') });
+  else if (shared.markers.length) box.textContent = t('song_from_link', { n: shared.markers.length });
+  songApi.render();
+}
+onLangChange(renderShared);
+
+/** Play a received postcard: each place in its layer, with its name. */
+async function playPostcard() {
+  const run = startRun();
+  $('postcard-box').hidden = false;
+  $('postcard-text').textContent = shared.postcard.map((p) => `${p.name} (${layerName(p.layer)})`).join(' → ');
+  for (const p of shared.postcard) {
+    if (run.cancelled) return;
+    await selectLayer(p.layer, { quiet: true, keepRuns: true });
+    if (LAYERS[p.layer].view !== 'global') view.fitBounds(p.lon - 15, p.lat - 10, p.lon + 15, p.lat + 10);
+    const s = goTo(p.lat, p.lon, { placeText: p.name });
+    state.tempName = '';
+    say(`${t('postcard_now', { name: p.name })} ${CONTENT[p.layer].phrase(s)}`);
+    if (!(await pwait(4500, run))) return;
+  }
+  engine.sequences.delete(run);
+}
+
+async function startFromWelcome() {
+  await showExplorer({ focusMap: !shared.postcard.length && !shared.markers.length });
+  if (shared.postcard.length) playPostcard();
+  else if (shared.markers.length) songApi.open();
+}
+
+$('btn-start').addEventListener('click', startFromWelcome);
 $('btn-test').addEventListener('click', testSound);
 $('btn-how').addEventListener('click', () => openDialog('dlg-how'));
 $('btn-help').addEventListener('click', () => openDialog('dlg-help'));
@@ -1087,9 +1142,10 @@ setVolume(store.get('volume', 60));
 renderCards();
 updatePlayButton();
 updateSheetText();
+renderShared();
 $('planet').style.backgroundImage = "url('data/air/texture.jpg')";
 LAYERS.air.load().catch(() => {});
 geo.load().then(initSearch).catch((e) => console.error(e));
 
 // test hook for the headless checks
-window.__eis = { state, engine, selectLayer, goTo, LAYERS, geo, hearCountry, summarize, searchPlaces, handleVoice, setAudioOnly };
+window.__eis = { state, engine, selectLayer, goTo, LAYERS, geo, hearCountry, summarize, searchPlaces, handleVoice, setAudioOnly, songApi };

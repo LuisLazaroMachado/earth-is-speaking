@@ -33,6 +33,7 @@
       <h1 class="hero-title" data-i18n="title">Earth Is Speaking</h1>
       <p class="hero-sub" data-i18n="subtitle">Listen to our planet</p>
       <p class="hero-tag" data-i18n="tagline">Touch the Earth. Hear what it says.</p>
+      <p id="welcome-share" class="share-note" hidden></p>
       <button type="button" id="btn-start" class="btn btn-hero" data-i18n="start">Start listening</button>
       <div class="welcome-actions">
         <button type="button" id="btn-journey" class="btn" data-i18n="journey">Start the journey</button>
@@ -129,6 +130,15 @@
         <div id="panel-body">
           <div class="phrase-row"><span id="p-icon"></span><p id="p-phrase" class="phrase" data-i18n="panel_empty"></p></div>
           <p id="p-place" class="place"></p>
+          <div class="panel-actions">
+            <button type="button" class="btn btn-small" id="btn-add-marker" data-i18n="add_marker">Add marker</button>
+            <button type="button" class="btn btn-secondary btn-small" id="btn-share-place" data-i18n="share_place">Share this place</button>
+          </div>
+          <section class="summary" id="postcard-box" aria-labelledby="postcard-h" hidden>
+            <h3 id="postcard-h" data-i18n="postcard_title">Sound postcard</h3>
+            <p id="postcard-text"></p>
+            <p class="hint" data-i18n="reply_hint"></p>
+          </section>
           <section class="summary" id="p-summary" aria-labelledby="p-summary-h" hidden>
             <h3 id="p-summary-h"></h3>
             <p id="p-summary-text"></p>
@@ -152,6 +162,30 @@
             <p id="d-sounds"></p>
           </details>
         </div>
+        <div id="share-out" class="share-out" hidden>
+          <label for="share-url" id="share-msg"></label>
+          <input id="share-url" type="text" readonly>
+        </div>
+        <section id="song" class="song" aria-labelledby="song-h" hidden>
+          <div class="song-head">
+            <h2 id="song-h" tabindex="-1" data-i18n="my_song">My Earth Song</h2>
+            <button type="button" class="btn btn-secondary btn-small" id="song-close" data-i18n="close">Close</button>
+          </div>
+          <fieldset class="song-mode">
+            <legend data-i18n="playlist_mode">Playlist mode</legend>
+            <label><input type="radio" name="song-mode" value="order" checked> <span data-i18n="mode_order">In order</span></label>
+            <label><input type="radio" name="song-mode" value="lr"> <span data-i18n="mode_lr">Left to right</span></label>
+            <label><input type="radio" name="song-mode" value="chord"> <span data-i18n="mode_chord">All together</span></label>
+          </fieldset>
+          <div class="song-actions">
+            <button type="button" class="btn btn-small" id="song-play" data-i18n="playlist">Play all</button>
+            <button type="button" class="btn btn-secondary btn-small" id="song-share" data-i18n="share">Share link</button>
+            <button type="button" class="btn btn-secondary btn-small" id="song-download" data-i18n="download">Download audio</button>
+          </div>
+          <p id="song-status" class="hint"></p>
+          <p id="song-empty" data-i18n="song_empty"></p>
+          <ol id="song-list" class="song-list"></ol>
+        </section>
       </aside>
     </div>
 
@@ -181,6 +215,7 @@
         <button type="button" class="btn btn-secondary btn-small" id="btn-repeat" data-i18n="repeat">Repeat</button>
       </div>
       <span class="spacer"></span>
+      <button type="button" class="btn btn-small" id="btn-song">My Earth Song (0)</button>
     </div>
   </div>
 

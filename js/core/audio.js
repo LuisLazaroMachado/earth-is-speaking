@@ -85,11 +85,13 @@ export class AudioEngine {
     g.gain.value = 0;
     g.connect(this.master);
     const v = { out: g, sources: [], nodes: [g], end: t0 + dur };
-    this.voices = this.voices.filter((x) => !x.killed && x.end > this.now);
-    this.voices.push(v);
+    if (!this.offline) this.voices = this.voices.filter((x) => !x.killed && x.end > this.now);
+    if (!this.offline) this.voices.push(v);
     while (this.voices.length > this.maxVoices) this.kill(this.voices[0]);
-    const ms = Math.max(0, (t0 + dur - this.now) * 1000) + 300;
-    v.timer = setTimeout(() => this._remove(v), ms);
+    if (!this.offline) { // offline renders keep every node until the render is done
+      const ms = Math.max(0, (t0 + dur - this.now) * 1000) + 300;
+      v.timer = setTimeout(() => this._remove(v), ms);
+    }
     return v;
   }
 
@@ -244,6 +246,45 @@ export class AudioEngine {
     tick();
     return handle;
   }
+}
+
+/**
+ * An engine that renders into an OfflineAudioContext (for "Download audio"). Same chain
+ * (master gain, limiter); no voice limit, because every note is scheduled in advance.
+ */
+export function createOfflineEngine(seconds, volume = 0.6, sampleRate = 44100) {
+  const e = new AudioEngine();
+  const ctx = new OfflineAudioContext(1, Math.ceil(seconds * sampleRate), sampleRate);
+  e.ctx = ctx;
+  e.maxVoices = Infinity;
+  e.offline = true;
+  e.master = ctx.createGain();
+  e.master.gain.value = volume;
+  e.comp = ctx.createDynamicsCompressor();
+  e.comp.threshold.value = -14; e.comp.knee.value = 6; e.comp.ratio.value = 14;
+  e.comp.attack.value = 0.003; e.comp.release.value = 0.2;
+  e.master.connect(e.comp);
+  e.comp.connect(ctx.destination);
+  e.noiseBuf = e._makeNoise(2);
+  e.ensure = () => ctx;
+  return e;
+}
+
+/** Encode a mono AudioBuffer as a 16-bit PCM WAV Blob. */
+export function encodeWav(buffer) {
+  const data = buffer.getChannelData(0);
+  const sr = buffer.sampleRate;
+  const out = new DataView(new ArrayBuffer(44 + data.length * 2));
+  const str = (o, s) => { for (let i = 0; i < s.length; i++) out.setUint8(o + i, s.charCodeAt(i)); };
+  str(0, 'RIFF'); out.setUint32(4, 36 + data.length * 2, true); str(8, 'WAVE');
+  str(12, 'fmt '); out.setUint32(16, 16, true); out.setUint16(20, 1, true); out.setUint16(22, 1, true);
+  out.setUint32(24, sr, true); out.setUint32(28, sr * 2, true); out.setUint16(32, 2, true); out.setUint16(34, 16, true);
+  str(36, 'data'); out.setUint32(40, data.length * 2, true);
+  for (let i = 0; i < data.length; i++) {
+    const v = Math.max(-1, Math.min(1, data[i]));
+    out.setInt16(44 + i * 2, v < 0 ? v * 0x8000 : v * 0x7fff, true);
+  }
+  return new Blob([out], { type: 'audio/wav' });
 }
 
 export const engine = new AudioEngine();
