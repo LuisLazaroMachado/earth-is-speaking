@@ -45,3 +45,9 @@ stored in `data/<layer>/meta.json` and shown in the app's About & methods dialog
 
 `tools/` holds a headless Microsoft Edge runner (puppeteer-core) and scenario scripts, including
 axe-core accessibility checks: `cd tools && npm install`, then `node tools/run.mjs tools/scenarios/stage3.mjs`.
+
+## Use of AI
+
+The code, data-preparation scripts, interface texts and demo slides were written with the help of an AI assistant (Claude, by Anthropic), directed, checked and tested by the team. The sound itself uses fixed rules, not AI. All data comes from NASA and the sources listed in the app.
+
+Demo (7 slides): https://luislazaromachado.github.io/earth-is-speaking/demo/

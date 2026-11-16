@@ -1,0 +1,166 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Earth Is Speaking - Demo</title>
+<meta name="description" content="7-slide demo of Earth Is Speaking, NASA Space Apps Challenge 2026, team Houston! We have a playlist.">
+<style>
+:root{--deep:#07173F;--deep2:#0B2560;--blue:#0960E1;--yon:#2E96F5;--yel:#EAEF07;--muted:#C9D6F2}
+*{box-sizing:border-box}html,body{margin:0;background:#020a1f;color:#fff;font:18px/1.45 "Segoe UI",system-ui,Arial,sans-serif}
+main{display:flex;flex-direction:column;align-items:center;gap:28px;padding:24px 16px 48px}
+.slide{position:relative;width:min(1280px,100%);aspect-ratio:16/9;background:radial-gradient(900px 500px at 85% 110%,rgba(9,96,225,.35),transparent 60%),var(--deep);
+border-radius:18px;padding:3.2% 4% 5.5%;display:grid;gap:2.5%;overflow:hidden;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+.two{grid-template-columns:1.05fr 1fr;align-items:center}
+h1{font-size:clamp(28px,5.6vw,72px);margin:0;line-height:1.02;letter-spacing:-.02em}
+h2{font-size:clamp(20px,3.2vw,42px);margin:0 0 .4em;line-height:1.1}
+.sub{color:var(--yon);font-size:clamp(16px,2.3vw,30px);font-weight:700;margin:.3em 0}
+.tag{color:var(--muted);font-size:clamp(13px,1.6vw,21px);margin:0 0 .8em}
+ul{margin:0;padding-left:1.1em}li{margin:.28em 0;font-size:clamp(12px,1.55vw,21px)}
+p{margin:.3em 0;font-size:clamp(12px,1.55vw,21px)}
+.big{font-size:clamp(22px,4vw,54px);font-weight:800;color:var(--yel);line-height:1.05}
+img{width:100%;border-radius:12px;border:2px solid rgba(46,150,245,.5);display:block}
+.num{position:absolute;top:2.4%;right:2.6%;color:var(--yel);font-weight:800;font-size:clamp(11px,1.3vw,17px)}
+.foot{position:absolute;left:4%;right:4%;bottom:2%;color:var(--muted);font-size:clamp(8px,.95vw,13px);display:flex;justify-content:space-between;gap:12px}
+table{width:100%;border-collapse:collapse;font-size:clamp(11px,1.45vw,19px)}
+th,td{text-align:left;padding:.42em .5em;border-bottom:1px solid rgba(201,214,242,.25)}th{color:var(--yon)}
+.pill{display:inline-block;border:1px solid var(--yon);border-radius:99px;padding:.05em .6em;font-size:.85em;background:rgba(46,150,245,.18)}
+.box{background:var(--deep2);border-left:5px solid var(--yel);border-radius:12px;padding:2.2% 3%}
+.flow{display:flex;gap:1%;align-items:center;flex-wrap:wrap;font-weight:700;font-size:clamp(11px,1.5vw,20px)}
+.flow span{background:var(--blue);border-radius:10px;padding:.35em .7em}.flow b{color:var(--yel)}
+a{color:var(--yel)}
+.imgs{display:grid;grid-template-columns:1fr 1fr;gap:3%}
+@media print{body{background:#fff}main{padding:0;gap:0}.slide{break-after:page;border-radius:0;box-shadow:none;width:100%}}
+</style>
+</head>
+<body>
+<main>
+
+<!-- 1. Title -->
+<section class="slide two" aria-label="Slide 1 of 7: title">
+  <span class="num">1 / 7</span>
+  <div>
+    <h1>Earth Is Speaking</h1>
+    <p class="sub">Listen to our planet</p>
+    <p class="tag">Touch the Earth. Hear what it says.</p>
+    <p><strong>Team:</strong> Houston! We have a playlist</p>
+    <p><strong>Members:</strong> Luis Lazaro Machado</p>
+    <p><strong>Challenge:</strong> The Earth Information Jukebox</p>
+    <p><strong>NASA Space Apps Challenge 2026</strong> · Local event: Lima, Peru</p>
+    <p>Try it: <a href="https://luislazaromachado.github.io/earth-is-speaking/">luislazaromachado.github.io/earth-is-speaking</a></p>
+  </div>
+  <img src="img/explorer.png" alt="Earth Is Speaking app: NASA air temperature map with the information panel saying 'Extremely cold here' for Antarctica">
+  <div class="foot"><span>Independent project, not endorsed by NASA. Data: NASA.</span><span>AI-assisted (Claude): code, data scripts and slide text, reviewed by the team. Screens are real app captures.</span></div>
+</section>
+
+<!-- 2. Introduction -->
+<section class="slide" aria-label="Slide 2 of 7: the problem">
+  <span class="num">2 / 7</span>
+  <div>
+    <h2>NASA shows our changing planet in stunning images…</h2>
+    <p class="big">…but images leave many people out.</p>
+  </div>
+  <div class="box">
+    <p><strong>1,550,196 people in Peru</strong> report a permanent difficulty seeing, even with glasses (INEI, Census 2017).</p>
+    <p>Most Earth-science material, maps and climate stories are visual only.</p>
+  </div>
+  <div>
+    <h2 style="color:var(--yon)">Our goal</h2>
+    <p>Make NASA Earth data something you can <strong>hear</strong>: built first for blind and low-vision people, enjoyable for families, schools and everyone, in English and Spanish.</p>
+  </div>
+  <div class="foot"><span>Earth Is Speaking · Houston! We have a playlist</span><span>AI-assisted (Claude), reviewed by the team.</span></div>
+</section>
+
+<!-- 3. User experience -->
+<section class="slide two" aria-label="Slide 3 of 7: how it works for the user">
+  <span class="num">3 / 7</span>
+  <div>
+    <h2>Touch the map. Hear the place.</h2>
+    <ul>
+      <li>Click, tap, drag "like a piano", use arrow keys or <strong>your voice</strong> ("Lima", "surprise me")</li>
+      <li><strong>Low note = cold, high note = hot</strong> · rising notes = more night lights · rhythm = lightning</li>
+      <li>Every point gets a simple sentence and a checked "Did you know?", read aloud</li>
+      <li><strong>Audio-only mode</strong>: use it without looking · keyboard only · screen readers</li>
+      <li>Visual sound pulse for deaf users · vibration on Android · EN / ES</li>
+    </ul>
+  </div>
+  <img src="img/peru.png" alt="Searching Peru: the map zooms in, draws the country outline and shows a summary of its temperature">
+  <div class="foot"><span>Earth Is Speaking · Houston! We have a playlist</span><span>AI-assisted (Claude), reviewed by the team.</span></div>
+</section>
+
+<!-- 4. NASA data -->
+<section class="slide" aria-label="Slide 4 of 7: NASA data turned into sound">
+  <span class="num">4 / 7</span>
+  <h2>Six NASA visualizations, turned into sound</h2>
+  <table>
+    <thead><tr><th>Layer</th><th>NASA source</th><th>Data type</th><th>Sound</th></tr></thead>
+    <tbody>
+      <tr><td>Air temperature</td><td>SVS 5147 · GEOS-FP (GMAO)</td><td><span class="pill">Measured (approx.)</span></td><td>pitch: cold low, hot high</td></tr>
+      <tr><td>Night lights 2012→2023</td><td>SVS 5276 · Black Marble, Suomi NPP VIIRS</td><td><span class="pill">Trend</span></td><td>rising / falling interval</td></tr>
+      <tr><td>Ocean currents</td><td>SVS 5479 · ECCO-2 (NASA/JPL, MIT)</td><td><span class="pill">Trend</span></td><td>pad, brighter = stronger</td></tr>
+      <tr><td>Aerosols</td><td>SVS 5669 · GEOS</td><td><span class="pill">Category</span></td><td>one instrument per particle</td></tr>
+      <tr><td>Forest height</td><td>SVS 4950 · GEDI lidar on the ISS</td><td><span class="pill">Trend</span></td><td>low hum → high bell</td></tr>
+      <tr><td>Lightning</td><td>SVS 5011 · LIS on the ISS</td><td><span class="pill">Density &amp; rhythm</span></td><td>1–8 drum hits per second</td></tr>
+    </tbody>
+  </table>
+  <div class="flow"><span>NASA frame</span><b>→</b><span>pixel color</span><b>→</b><span>NASA color bar value</span><b>→</b><span>pentatonic note (Web Audio, real time)</span></div>
+  <p>No AI in the sound: fixed, transparent rules. Data scripts and validation are public on GitHub.</p>
+  <div class="foot"><span>Earth Is Speaking · Houston! We have a playlist</span><span>AI-assisted (Claude), reviewed by the team.</span></div>
+</section>
+
+<!-- 5. Science -->
+<section class="slide two" aria-label="Slide 5 of 7: science you can trust">
+  <span class="num">5 / 7</span>
+  <div>
+    <h2>Honest science, by ear</h2>
+    <ul>
+      <li><strong>99.1%</strong> of temperature pixels matched to NASA's color bar; anything else stays silent</li>
+      <li>Honest labels: "−40 °C or colder", "approx.", "trend", "few changes detected"</li>
+      <li>About 20 km per pixel: never more precision than the data has</li>
+      <li>242 countries: 24 area-uniform points + summary, weighted by cos(latitude); compare two countries</li>
+      <li>Fun facts checked against NASA and NOAA pages (unverifiable ones removed)</li>
+      <li>Automated WCAG 2.2 AA checks (axe-core): no violations</li>
+    </ul>
+  </div>
+  <img src="img/lightning.png" alt="Lightning layer: NASA globe picture from the ISS with yellow lightning dots; the panel says this layer has no place names and offers another layer">
+  <div class="foot"><span>Earth Is Speaking · Houston! We have a playlist</span><span>AI-assisted (Claude), reviewed by the team.</span></div>
+</section>
+
+<!-- 6. Storytelling and connection -->
+<section class="slide" aria-label="Slide 6 of 7: stories that connect people">
+  <span class="num">6 / 7</span>
+  <h2>Stories that connect people</h2>
+  <div class="imgs">
+    <img src="img/journey.png" alt="Guided journey, stop 8 of 8: Home, Lima, Peru, with night lights that grew since 2012">
+    <img src="img/song.png" alt="My Earth Song panel with numbered markers, playlist modes, share link and download audio">
+  </div>
+  <ul>
+    <li><strong>Guided journey</strong>: 8 narrated stops, Antarctica → Sahara → Gulf Stream → Humboldt Current → home in <strong>Lima</strong></li>
+    <li><strong>My Earth Song</strong>: mix places from any layer, play them as a melody or a chord, download as audio with NASA credits</li>
+    <li><strong>Sound postcards</strong>: send a place; your friend answers with theirs ("my city and yours"). No accounts, no server: it all travels in the link</li>
+  </ul>
+  <div class="foot"><span>Earth Is Speaking · Houston! We have a playlist</span><span>AI-assisted (Claude), reviewed by the team.</span></div>
+</section>
+
+<!-- 7. Future -->
+<section class="slide" aria-label="Slide 7 of 7: the future">
+  <span class="num">7 / 7</span>
+  <div>
+    <h2>What comes next</h2>
+    <ul>
+      <li>Test with blind students and associations in Lima; classroom guides in Spanish</li>
+      <li>More NASA layers and raw datasets for finer values; a 3D pixel globe</li>
+      <li>More languages, an offline mode for schools, museum and science-center installations</li>
+    </ul>
+  </div>
+  <p class="big">When the Earth speaks, everyone can listen.</p>
+  <div class="box">
+    <p>App: <a href="https://luislazaromachado.github.io/earth-is-speaking/">luislazaromachado.github.io/earth-is-speaking</a></p>
+    <p>Code &amp; data scripts: <a href="https://github.com/LuisLazaroMachado/earth-is-speaking">github.com/LuisLazaroMachado/earth-is-speaking</a></p>
+  </div>
+  <div class="foot"><span>Earth Is Speaking · Houston! We have a playlist · NASA Space Apps Challenge 2026</span><span>AI-assisted (Claude), reviewed by the team.</span></div>
+</section>
+
+</main>
+</body>
+</html>
