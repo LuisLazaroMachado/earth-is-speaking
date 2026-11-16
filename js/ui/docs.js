@@ -13,6 +13,7 @@ const SHORTCUTS = [
   [['W'], 'Where am I? (place, layer and value)', '¿Dónde estoy? (lugar, capa y valor)'],
   [['I'], 'Read the whole information panel', 'Leer todo el panel de información'],
   [['R'], 'Repeat the last spoken message', 'Repetir el último mensaje hablado'],
+  [['V'], 'Speak a place or a command (Google Chrome)', 'Decir un lugar o un comando (Google Chrome)'],
   [['H'], 'Open this list of shortcuts', 'Abrir esta lista de atajos'],
   [['Esc'], 'Close a dialog', 'Cerrar un diálogo'],
 ];
@@ -37,6 +38,8 @@ export function howToHTML() {
       <ul><li>Pulsa <kbd>Tab</kbd> hasta llegar al mapa. Las flechas mueven el cursor 2 grados (con Shift, 10).</li>
       <li><kbd>Enter</kbd> suena el punto. <kbd>W</kbd> dice dónde estás. <kbd>I</kbd> lee el panel completo.</li>
       <li><kbd>H</kbd> abre la lista de atajos.</li></ul>
+      <h3>Voz y modo solo audio</h3>
+      <p>En Google Chrome, pulsa el micrófono o la tecla <kbd>V</kbd> y di un lugar ("Lima", "Japón") o un comando ("sorpréndeme", "más fuerte", "dónde estoy", "siguiente capa", "ayuda"). El <strong>modo solo audio</strong> hace que la app diga todo en voz alta, para usarla sin mirar. Si ya usas un lector de pantalla, quizá no lo necesites.</p>
       <h3>Recorrido guiado</h3>
       <p><strong>Empezar el recorrido</strong> te lleva por 8 paradas narradas, de la Antártida a Lima, con su sonido. Usa Siguiente, Atrás o Terminar; la barra espaciadora pausa también la voz.</p>
       <h3>Opciones</h3>
@@ -58,6 +61,8 @@ export function howToHTML() {
     <ul><li>Press <kbd>Tab</kbd> until you reach the map. Arrow keys move the cursor 2 degrees (with Shift, 10).</li>
     <li><kbd>Enter</kbd> plays the point. <kbd>W</kbd> tells you where you are. <kbd>I</kbd> reads the whole panel.</li>
     <li><kbd>H</kbd> opens the list of shortcuts.</li></ul>
+    <h3>Voice and audio-only mode</h3>
+    <p>In Google Chrome, press the microphone or the <kbd>V</kbd> key and say a place ("Lima", "Japan") or a command ("surprise me", "louder", "where am I", "next layer", "help"). <strong>Audio-only mode</strong> makes the app say everything aloud, so you can use it without looking. If you already use a screen reader, you may not need it.</p>
     <h3>Guided journey</h3>
     <p><strong>Start the journey</strong> takes you through 8 narrated stops, from Antarctica to Lima, with their sound. Use Next, Back or End; the space bar also pauses the voice.</p>
     <h3>Options</h3>
@@ -104,7 +109,7 @@ export function aboutHTML(metas = {}) {
       <li>Las corrientes y las luces son tendencias, no medidas.</li>
       <li>Toda media y porcentaje por país se pondera por cos(latitud), porque en un mapa plano los píxeles cerca de los polos cubren menos superficie. Hasta 24 puntos por país, repartidos de forma uniforme en área.</li></ul>
       <h3>Privacidad</h3>
-      <p>Sin cuentas ni seguimiento. El navegador guarda solo el idioma, el volumen, la velocidad y el modo.</p>
+      <p>Sin cuentas ni seguimiento. El navegador guarda solo el idioma, el volumen, la velocidad, las opciones y el modo. El reconocimiento de voz de Chrome envía el audio a un servicio en la nube de Google; el micrófono solo se activa cuando pulsas el botón o la tecla V.</p>
       <h3>Accesibilidad</h3>
       <p>Diseñada primero para personas ciegas y con baja visión, pero todavía no se probó con ellas. Agradecemos sus comentarios.</p>
       <h3>Impacto local: Lima, Perú</h3>
@@ -140,7 +145,7 @@ export function aboutHTML(metas = {}) {
     <li>Ocean currents and night lights are trends, not measurements.</li>
     <li>Every country mean and percentage is weighted by cos(latitude), because on a flat map the pixels near the poles cover less surface. Up to 24 points per country, spread evenly by area.</li></ul>
     <h3>Privacy</h3>
-    <p>No accounts and no tracking. The browser only stores your language, volume, speed and mode.</p>
+    <p>No accounts and no tracking. The browser only stores your language, volume, speed, options and mode. Chrome's speech recognition sends the audio to a Google cloud service; the microphone is only used when you press the button or the V key.</p>
     <h3>Accessibility</h3>
     <p>Designed first for blind and low-vision people, but not yet tested with them. We welcome feedback.</p>
     <h3>Local impact: Lima, Peru</h3>

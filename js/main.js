@@ -14,6 +14,7 @@ import geo, { norm } from './core/geo.js';
 import { summarize } from './core/stats.js';
 import { combobox } from './ui/combobox.js';
 import { STOPS, findNear, hottestIn } from './journey.js';
+import { voiceSupported, listenOnce, parseUtterance, VOICE_HELP } from './voice.js';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -33,6 +34,7 @@ const state = {
   speed: store.get('speed', 'normal'),
   last: null, // last sample shown in the panel
   fact: null,
+  audioOnly: store.get('audioOnly', false),
 };
 
 export const layerName = (id) => t(NAME_KEY[id]);
@@ -49,6 +51,7 @@ export function announce(text) {
     const live = $('live');
     live.textContent = '';
     requestAnimationFrame(() => { live.textContent = text; });
+    if (state.audioOnly && !state.suppressSpeech) speak(text, getLang());
   }, 300);
 }
 
@@ -265,6 +268,7 @@ export async function selectLayer(id, { latest = false, quiet = false, keepRuns 
     const pl = state.summary.place;
     showSummary(pl, summarize(L1, geo.pixelsOf(pl.id, { coastal: !!L1.coastal })));
   } else hideSummary();
+  if (state.audioOnly) engine.tick();
   if (!quiet) announce(t('layer_now', { layer: layerName(id) }) + (latest && L1.meta ? `. ${t('latest_label')}: ${L1.meta.frame_label}` : ''));
   return true;
 }
@@ -564,13 +568,20 @@ function surprise() {
 // ---------------------------------------------------------------------------------
 // Spoken helpers: Where am I? (W), read panel (I), repeat (R)
 // ---------------------------------------------------------------------------------
+/** Speak a text and put it in the live region, without speaking it twice in audio-only mode. */
+function say(text) {
+  speak(text, getLang());
+  state.suppressSpeech = true;
+  announce(text);
+  setTimeout(() => { state.suppressSpeech = false; }, 450);
+}
+
 function whereAmI() {
   const s = state.last;
   const text = s
     ? `${placeLabel(s.lat, s.lon)}. ${layerName(state.layerId)}. ${content().value(s)}.`
     : `${layerName(state.layerId)}. ${t('panel_empty')}`;
-  speak(text, getLang());
-  announce(text);
+  say(text);
 }
 
 function readPanel() {
@@ -706,6 +717,7 @@ document.addEventListener('keydown', (e) => {
   else if (k === 'w' || k === 'W') whereAmI();
   else if (k === 'i' || k === 'I') readPanel();
   else if (k === 'r' || k === 'R') speak(lastUtterance(), getLang());
+  else if (k === 'v' || k === 'V') voiceFlow();
   else if (k === '/') { e.preventDefault(); $('search').focus(); }
   else if ((k === '+' || k === '=') && e.target !== $('map')) view.zoomBy(2);
   else if ((k === '-' || k === '_') && e.target !== $('map')) view.zoomBy(0.5);
@@ -923,6 +935,128 @@ $('btn-options').addEventListener('click', () => openDialog('dlg-options'));
 onLangChange(() => renderJourney());
 applyOptions();
 
+// ---------------------------------------------------------------------------------
+// Audio-only mode: the app speaks every announcement; hover preview is locked off
+// ---------------------------------------------------------------------------------
+function renderAudioOnly() {
+  const on = !!state.audioOnly;
+  $('btn-audio-toggle').setAttribute('aria-pressed', on ? 'true' : 'false');
+  $('audio-banner').hidden = !on;
+  $('audio-banner').textContent = t('audio_banner');
+  applyOptions();
+}
+
+export function setAudioOnly(on, { speakIt = true } = {}) {
+  state.audioOnly = !!on;
+  store.set('audioOnly', state.audioOnly);
+  renderAudioOnly();
+  if (speakIt) {
+    engine.tick();
+    say(on ? t('audio_on') : t('audio_off'));
+  }
+}
+
+// ---------------------------------------------------------------------------------
+// Voice questions and commands (Chrome)
+// ---------------------------------------------------------------------------------
+const voice = { firstAsked: store.get('voiceAsked', false), busy: false };
+
+async function askAndListen(prompt) {
+  await Promise.race([speak(prompt, getLang()), sleep(6000)]);
+  $('voice-status').hidden = false;
+  $('voice-status').textContent = t('listening');
+  $('btn-mic').setAttribute('aria-pressed', 'true');
+  const res = await listenOnce(getLang());
+  $('voice-status').hidden = true;
+  $('btn-mic').setAttribute('aria-pressed', 'false');
+  return res;
+}
+
+export async function voiceFlow() {
+  if (voice.busy) return;
+  engine.ensure();
+  if (!voiceSupported()) {
+    say(t('no_mic'));
+    $('search').focus();
+    return;
+  }
+  voice.busy = true;
+  try {
+    const prompt = voice.firstAsked ? t('voice_short') : t('voice_first');
+    voice.firstAsked = true;
+    store.set('voiceAsked', true);
+    let res = await askAndListen(prompt);
+    let ok = res.length && (await handleVoice(res));
+    if (!ok) {
+      // repeat once with other words, focus the text box, never loop
+      $('search').focus();
+      res = await askAndListen(t('voice_retry'));
+      ok = res.length && (await handleVoice(res));
+      if (!ok) { say(t('voice_none')); $('search').focus(); }
+    }
+  } finally {
+    voice.busy = false;
+  }
+}
+
+/** Act on recognized speech. Returns true if something was understood. */
+export async function handleVoice(transcripts) {
+  for (const raw of transcripts) {
+    const a = parseUtterance(raw);
+    if (!a) continue;
+    if (a.type === 'command') { runCommand(a.name); return true; }
+    if (a.type === 'layer') { await selectLayer(a.id); return true; }
+    if (a.type === 'place') {
+      const hits = searchPlaces(a.text).filter((h) => h.sc >= 2);
+      if (hits.length) {
+        const item = hits[0];
+        if (state.audioOnly) engine.tick();
+        speak(t('voice_going', { place: item.label }), getLang());
+        $('search').value = item.label;
+        await choosePlace(item);
+        return true;
+      }
+    }
+  }
+  return false;
+}
+
+function runCommand(name) {
+  const idx = CARD_ORDER.indexOf(state.layerId);
+  switch (name) {
+    case 'play': if (engine.paused) togglePause(); break;
+    case 'pause': if (!engine.paused) togglePause(); break;
+    case 'stop': stopAll(); break;
+    case 'louder': setVolume(+$('vol').value + 10, true); break;
+    case 'quieter': setVolume(+$('vol').value - 10, true); break;
+    case 'repeat': speak(lastUtterance(), getLang()); break;
+    case 'where': whereAmI(); break;
+    case 'read': readPanel(); break;
+    case 'help': say(L(VOICE_HELP)); break;
+    case 'surprise': surprise(); break;
+    case 'nextlayer': selectLayer(CARD_ORDER[(idx + 1) % CARD_ORDER.length]); break;
+    case 'prevlayer': selectLayer(CARD_ORDER[(idx - 1 + CARD_ORDER.length) % CARD_ORDER.length]); break;
+    case 'audioonly': setAudioOnly(true); break;
+    case 'journey': startJourney(0); break;
+    case 'scale': hearScale(); break;
+    case 'sweep': landscapeSweep(); break;
+    default: break;
+  }
+}
+
+$('btn-mic').hidden = !voiceSupported();
+$('btn-mic').addEventListener('click', voiceFlow);
+$('btn-repeat').addEventListener('click', () => speak(lastUtterance(), getLang()));
+$('btn-where').addEventListener('click', whereAmI);
+$('btn-audio-toggle').addEventListener('click', () => setAudioOnly(!state.audioOnly));
+$('btn-audio-only').addEventListener('click', async () => {
+  engine.ensure();
+  await showExplorer();
+  setAudioOnly(true);
+});
+onLangChange(() => renderAudioOnly());
+renderAudioOnly();
+
 $('btn-start').addEventListener('click', () => showExplorer());
 $('btn-test').addEventListener('click', testSound);
 $('btn-how').addEventListener('click', () => openDialog('dlg-how'));
@@ -958,4 +1092,4 @@ LAYERS.air.load().catch(() => {});
 geo.load().then(initSearch).catch((e) => console.error(e));
 
 // test hook for the headless checks
-window.__eis = { state, engine, selectLayer, goTo, LAYERS, geo, hearCountry, summarize, searchPlaces };
+window.__eis = { state, engine, selectLayer, goTo, LAYERS, geo, hearCountry, summarize, searchPlaces, handleVoice, setAudioOnly };

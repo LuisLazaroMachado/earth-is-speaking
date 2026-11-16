@@ -132,6 +132,15 @@ export class AudioEngine {
     if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
   }
 
+  /** Short soft "tic" confirming a change of layer or place (audio-only mode). */
+  tick() {
+    if (!this.ensure()) return;
+    const t0 = this.now + 0.005;
+    const v = this.voice(t0, 0.08);
+    this.perc(v.out.gain, t0, 0.18, 0.04);
+    v.sources.push(this.osc('sine', 1760, t0, t0 + 0.08, v.out));
+  }
+
   // ---- building blocks ----------------------------------------------------------
 
   osc(type, freq, t0, t1, dest, detuneCents = 0) {

@@ -327,3 +327,7 @@ kbd { background: var(--deep); border: 1px solid var(--yonder); border-radius: 6
   border: 3px solid var(--yellow); box-shadow: 0 0 12px rgba(234, 239, 7, 0.7); opacity: 0; left: 0; top: 0; }
 
 .stage > * { flex-shrink: 0; }
+
+.voice-status { font-weight: 700; color: var(--yellow); }
+#btn-mic[aria-pressed="true"] { background: var(--yellow); color: var(--deep); }
+#btn-audio-toggle[aria-pressed="true"] { background: var(--yellow); color: var(--deep); border-color: var(--yellow); }
