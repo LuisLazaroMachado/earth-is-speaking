@@ -50,6 +50,10 @@ const STR = {
     stopped: 'Stopped', volume_now: 'Volume {v} percent', layer_now: 'Layer: {layer}',
     footer_credit: 'Images and data: NASA Scientific Visualization Studio and the missions credited in About & methods.',
     nasa_logo_alt: 'NASA', open_panel: 'Show details', close_panel: 'Hide details', controls: 'Sound controls',
+    zoom_group: 'Map zoom', zoom_in: 'Zoom in', zoom_out: 'Zoom out', zoom_reset: 'World',
+    search_none: 'No places found', results: '{n} results', compare_a: 'First country', compare_b: 'Second country',
+    compare_need: 'Choose two countries to compare them.', listening_to: 'Listening to {place}…', listen_to: 'Listen to {place}',
+    summary_of: 'Summary: {place}', kind_country: 'Country', kind_city: 'City', kind_zone: 'Area', layer_no_compare: 'This layer cannot be compared by country.',
   },
   es: {
     title: 'Earth Is Speaking', subtitle: 'Escucha nuestro planeta', tagline: 'Toca la Tierra. Escucha lo que dice.',
@@ -98,6 +102,10 @@ const STR = {
     stopped: 'Detenido', volume_now: 'Volumen {v} por ciento', layer_now: 'Capa: {layer}',
     footer_credit: 'Imágenes y datos: NASA Scientific Visualization Studio y las misiones citadas en Acerca de y métodos.',
     nasa_logo_alt: 'NASA', open_panel: 'Mostrar detalles', close_panel: 'Ocultar detalles', controls: 'Controles de sonido',
+    zoom_group: 'Zoom del mapa', zoom_in: 'Acercar', zoom_out: 'Alejar', zoom_reset: 'Mundo',
+    search_none: 'No se encontraron lugares', results: '{n} resultados', compare_a: 'Primer país', compare_b: 'Segundo país',
+    compare_need: 'Elige dos países para compararlos.', listening_to: 'Escuchando {place}…', listen_to: 'Escuchar {place}',
+    summary_of: 'Resumen: {place}', kind_country: 'País', kind_city: 'Ciudad', kind_zone: 'Zona', layer_no_compare: 'Esta capa no se puede comparar por país.',
   },
 };
 

@@ -140,7 +140,7 @@ button, input, select { font: inherit; color: inherit; }
 .cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .card {
   position: relative; width: 100%; display: grid; grid-template-columns: 40px 1fr; gap: 4px 12px;
-  align-items: start; text-align: left; padding: 12px 14px; min-height: 96px;
+  align-items: start; text-align: left; padding: 12px 14px 20px; min-height: 96px;
   border-radius: var(--radius); border: 3px solid transparent; cursor: pointer; overflow: hidden;
   background: var(--electric); color: #fff;
 }
@@ -151,7 +151,7 @@ button, input, select { font: inherit; color: inherit; }
 .card-name { font-weight: 700; font-size: 1.08rem; }
 .card-badge { justify-self: start; font-size: 0.82rem; font-weight: 600; padding: 1px 10px; border-radius: 999px; background: rgba(46, 150, 245, 0.22); border: 1px solid var(--yonder); color: #fff; }
 .card-desc { font-size: 0.95rem; color: var(--muted); }
-.card-credit { position: absolute !important; right: 10px; top: 6px; font-size: 0.68rem; color: rgba(255, 255, 255, 0.7); z-index: 1; }
+.card-credit { position: absolute !important; right: 10px; bottom: 3px; font-size: 0.68rem; color: rgba(255, 255, 255, 0.7); z-index: 1; }
 .card[aria-current="true"] { border-color: var(--yellow); box-shadow: 0 0 0 2px rgba(234, 239, 7, 0.35); }
 .card[aria-disabled="true"] { cursor: not-allowed; }
 .card[aria-disabled="true"] .card-badge { border-color: var(--muted); background: rgba(201, 214, 242, 0.12); }
@@ -280,4 +280,31 @@ kbd { background: var(--deep); border: 1px solid var(--yonder); border-radius: 6
 
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* ---------- search, zoom, summary, compare ---------- */
+.search { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+.combo { position: relative; }
+.combo input { min-height: 44px; width: min(320px, 70vw); padding: 8px 14px; border-radius: 999px; border: 2px solid var(--yonder); background: var(--deep-2); color: #fff; }
+.combo input::placeholder { color: var(--muted); opacity: 1; }
+.combo-list { position: absolute; z-index: 40; left: 0; right: 0; top: calc(100% + 4px); margin: 0; padding: 4px; list-style: none;
+  background: var(--deep-2); border: 2px solid var(--yonder); border-radius: 12px; max-height: 320px; overflow: auto; min-width: 260px; }
+.combo-list li { padding: 8px 12px; border-radius: 8px; cursor: pointer; display: flex; justify-content: space-between; gap: 10px; min-height: 44px; align-items: center; }
+.combo-list li .sub { color: var(--muted); font-size: 0.9rem; }
+.combo-list li[aria-selected="true"], .combo-list li:hover { background: var(--neon); }
+.combo-list li[aria-selected="true"] .sub, .combo-list li:hover .sub { color: #fff; }
+.zoom { display: flex; gap: 6px; }
+.summary { background: rgba(46, 150, 245, 0.12); border: 2px solid var(--yonder); border-radius: var(--radius); padding: 10px 14px; }
+.summary h3 { font-size: 1rem; color: var(--yonder); margin-bottom: 4px; }
+.compare-pick { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.compare-pick label { display: block; color: var(--muted); font-weight: 600; margin-bottom: 4px; }
+.compare-pick .combo input { width: 100%; }
+.cmp-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
+.cmp-table th, .cmp-table td { text-align: left; padding: 8px; border-bottom: 1px solid var(--line); vertical-align: top; }
+.cmp-table thead th { color: var(--yonder); }
+.cmp-table .cmp-phrase { font-weight: 400; color: #fff; font-size: 0.95rem; margin: 4px 0 8px; }
+@media (max-width: 960px) {
+  .combo input { width: min(260px, 60vw); }
+  .compare-pick { grid-template-columns: 1fr; }
+  .zoom .btn-small { min-width: 44px; }
 }

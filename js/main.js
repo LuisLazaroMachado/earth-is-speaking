@@ -10,6 +10,9 @@ import { CONTENT, CARDS, icon, typeLabel, nextFact } from './content.js';
 import { PLACES, nearestCity } from './data/places.js';
 import { store } from './store.js';
 import { shortcutsHTML, howToHTML, aboutHTML } from './ui/docs.js';
+import geo, { norm } from './core/geo.js';
+import { summarize } from './core/stats.js';
+import { combobox } from './ui/combobox.js';
 
 const $ = (id) => document.getElementById(id);
 const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -17,7 +20,8 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 export const CARD_ORDER = ['air', 'lights', 'ocean', 'aero', 'forest', 'lightning'];
 const NAME_KEY = { air: 'layer_air', lights: 'layer_lights', ocean: 'layer_ocean', aero: 'layer_aero', forest: 'layer_forest', lightning: 'layer_light' };
 const TYPE = { air: 'measured', lights: 'trend', ocean: 'trend', aero: 'category', forest: 'trend', lightning: 'density' };
-const CARD_IMG = { air: 'data/cards/air.jpg', latest: 'data/cards/latest.jpg' };
+const CARD_IMG = { air: 'data/cards/air.jpg', latest: 'data/cards/latest.jpg', lights: 'data/cards/lights.jpg',
+  ocean: 'data/cards/ocean.jpg', aero: 'data/cards/aero.jpg' };
 const SWEEP_MS = { slow: 32000, normal: 16000, fast: 8000 };
 const GAP = { slow: 1.6, normal: 1, fast: 0.6 };
 
@@ -51,10 +55,21 @@ export function announce(text) {
 // Place names (lat/lon only)
 // ---------------------------------------------------------------------------------
 export function placeLabel(lat, lon) {
+  const country = geo.countryAt(lat, lon);
   const near = nearestCity(lat, lon, 150);
-  if (near) return t('near', { place: L(near.place) });
+  if (near) return t('near', { place: L(near.place) }) + (country && L(country) !== L(near.place) ? `, ${L(country)}` : '');
+  if (country) return L(country);
   const c = fmtLatLon(lat, lon);
+  if (geo.ready && !geo.isLand(lat, lon)) return t('ocean_at', c);
   return t('coords', c);
+}
+
+/** True when a sample makes a sound in its layer. */
+export function audible(s) {
+  if (!s || !s.hasData) return false;
+  if (s.layer === 'lights') return s.kind === 'more' || s.kind === 'less';
+  if (s.layer === 'aero') return !!s.cat;
+  return true;
 }
 
 // ---------------------------------------------------------------------------------
@@ -63,6 +78,7 @@ export function placeLabel(lat, lon) {
 const view = new MapView($('map'), {
   onPress(lat, lon) {
     engine.stopAll();
+    hideSummary();
     const s = layer().sample(lat, lon);
     playSample(engine, s);
     present(s, { announceIt: true });
@@ -90,6 +106,7 @@ const view = new MapView($('map'), {
   },
   onActivate(lat, lon) {
     engine.stopAll();
+    hideSummary();
     const s = layer().sample(lat, lon);
     playSample(engine, s);
     view.setTemp({ lat, lon });
@@ -103,16 +120,26 @@ const view = new MapView($('map'), {
 function summaryLine(s) {
   const c = CONTENT[s.layer];
   const v = c.shortValue ? c.shortValue(s) : '';
-  return `${placeLabel(s.lat, s.lon)}. ${c.phrase(s)}${v ? ' ' + v + '.' : ''}`;
+  return `${state.placeText || placeLabel(s.lat, s.lon)}. ${c.phrase(s)}${v ? ' ' + v + '.' : ''}`;
 }
 
-function present(s, { announceIt = true, rotateFact = true } = {}) {
+function hideSummary() { $('p-summary').hidden = true; state.summary = null; }
+function showSummary(place, st) {
+  state.summary = { place, st };
+  const c = content();
+  $('p-summary').hidden = false;
+  $('p-summary-h').textContent = t('summary_of', { place: L(place) });
+  $('p-summary-text').textContent = c.summaryText(st, L(place));
+}
+
+function present(s, { announceIt = true, rotateFact = true, placeText = null } = {}) {
   state.last = s;
+  state.placeText = placeText;
   const c = CONTENT[s.layer];
   $('p-icon').innerHTML = icon(s.layer);
   $('p-phrase').textContent = c.phrase(s);
   $('p-phrase').removeAttribute('data-i18n');
-  $('p-place').textContent = placeLabel(s.lat, s.lon);
+  $('p-place').textContent = placeText || placeLabel(s.lat, s.lon);
   if (rotateFact || !state.fact) state.fact = nextFact(s.layer, s);
   $('p-dyk').hidden = !state.fact;
   $('p-fact').textContent = state.fact ? L(state.fact) : '';
@@ -208,8 +235,12 @@ export async function selectLayer(id, { latest = false, quiet = false } = {}) {
   if (state.last) {
     const s = L1.sample(state.last.lat, state.last.lon);
     state.fact = null;
-    present(s, { announceIt: false });
+    present(s, { announceIt: false, placeText: state.placeText });
   } else resetPanel();
+  if (state.summary && L1.place) {
+    const pl = state.summary.place;
+    showSummary(pl, summarize(L1, geo.pixelsOf(pl.id, { coastal: !!L1.coastal })));
+  } else hideSummary();
   if (!quiet) announce(t('layer_now', { layer: layerName(id) }) + (latest && L1.meta ? `. ${t('latest_label')}: ${L1.meta.frame_label}` : ''));
   return true;
 }
@@ -308,23 +339,160 @@ export function testSound() {
   engine.sequence(steps, { tail: 600 });
 }
 
-export function goTo(lat, lon, { full = true } = {}) {
+export function goTo(lat, lon, { full = true, placeText = null } = {}) {
   engine.stopAll();
   view.setCursor(lat, lon);
   view.setTemp({ lat, lon });
   const s = layer().sample(lat, lon);
   playSample(engine, s, full ? {} : { dur: 0.6 });
-  present(s, { announceIt: false });
+  present(s, { announceIt: false, placeText });
   return s;
 }
+
+// ---------------------------------------------------------------------------------
+// Places: search, country sweep and summary, compare
+// ---------------------------------------------------------------------------------
+const kindLabel = (k) => t(k === 'country' ? 'kind_country' : k === 'city' ? 'kind_city' : 'kind_zone');
+const esc = (x) => String(x).replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[ch]));
+
+export function searchPlaces(q, { countriesOnly = false } = {}) {
+  const n = norm(q);
+  if (!n) return [];
+  const out = [];
+  const score = (names) => {
+    let best = 0;
+    for (const nm of names) {
+      const v = norm(nm);
+      if (!v) continue;
+      if (v === n) best = Math.max(best, 4);
+      else if (v.startsWith(n)) best = Math.max(best, 3);
+      else if (v.split(/[\s(,-]+/).some((w) => w.startsWith(n))) best = Math.max(best, 2);
+      else if (n.length >= 3 && v.includes(n)) best = Math.max(best, 1);
+    }
+    return best;
+  };
+  geo.countries.forEach((c) => {
+    const sc = score([c.en, c.es, c.iso]);
+    if (sc) out.push({ sc: sc + 0.5, label: L(c), sub: kindLabel('country'), kind: 'country', data: c });
+  });
+  if (!countriesOnly) {
+    PLACES.forEach((p) => {
+      const sc = score([p.en, p.es, ...(p.alias || [])]);
+      if (sc) {
+        const country = geo.countryAt(p.lat, p.lon);
+        out.push({ sc, label: L(p), sub: `${kindLabel(p.kind)}${country && p.kind === 'city' ? ' · ' + L(country) : ''}`, kind: p.kind, data: p });
+      }
+    });
+  }
+  return out.sort((a, b) => b.sc - a.sc || a.label.localeCompare(b.label));
+}
+
+export async function choosePlace(item) {
+  engine.ensure();
+  if (item.kind === 'country') return hearCountry(item.data);
+  const p = item.data;
+  hideSummary();
+  view.setOutline(null);
+  const d = Math.max(3, (p.r / 111) * 3);
+  view.fitBounds(p.lon - d * 1.5, p.lat - d, p.lon + d * 1.5, p.lat + d);
+  const s = goTo(p.lat, p.lon, { placeText: p.kind === 'city' ? t('small_area', { place: L(p) }) : L(p) });
+  announce(`${t('voice_going', { place: L(p) })}. ${summaryLine(s)}`);
+  return s;
+}
+
+/** Play up to 24 area-uniform points of a country (west to east), then its summary. */
+export async function hearCountry(country, { fly = true } = {}) {
+  const L1 = layer();
+  engine.ensure();
+  engine.stopAll();
+  if (!L1.place) { announce(t('no_place_layer')); return null; }
+  const outlines = await geo.loadOutlines();
+  view.setOutline(outlines[country.id]);
+  if (fly) {
+    const [a, b, c, d] = country.bbox;
+    if (c - a > 180) view.resetView(); else view.fitBounds(a, b, c, d);
+  }
+  const coastal = !!L1.coastal;
+  const pixels = geo.pixelsOf(country.id, { coastal });
+  if (coastal && !pixels.length) {
+    const st = { noCoast: true, empty: true };
+    showSummary(country, st);
+    $('sound-desc').textContent = t('no_coast');
+    announce(`${L(country)}. ${t('no_coast')}`);
+    return st;
+  }
+  const st = summarize(L1, pixels);
+  const small = country.px <= 2;
+  const pts = geo.samplePoints(pixels, 24);
+  const gap = 400 * GAP[state.speed];
+  announce(t('listening_to', { place: L(country) }));
+  const placeText = small ? t('small_area', { place: L(country) }) : L(country);
+  const steps = pts.map((p, i) => ({ at: i * gap, fn: () => {
+    view.setCursor(p.lat, p.lon);
+    const s = L1.sample(p.lat, p.lon);
+    playSample(engine, s, { dur: Math.max(0.35, gap / 1000 + 0.05) });
+    present(s, { announceIt: false, rotateFact: i === 0, placeText });
+  } }));
+  engine.sequence(steps, { tail: gap + 200, onEnd: () => {
+    showSummary(country, st);
+    announce(content().summaryText(st, placeText));
+  } });
+  return st;
+}
+
+function initSearch() {
+  combobox({
+    input: $('search'), list: $('search-list'),
+    search: (q) => searchPlaces(q),
+    onSelect: choosePlace,
+    onStatus: (n) => { $('search-status').textContent = n ? t('results', { n }) : t('search_none'); },
+  });
+  const picks = { a: null, b: null };
+  ['a', 'b'].forEach((k) => combobox({
+    input: $(`cmp-${k}`), list: $(`cmp-${k}-list`),
+    search: (q) => searchPlaces(q, { countriesOnly: true }),
+    onSelect: (it) => { picks[k] = it.data; renderCompare(picks); },
+  }));
+  state.picks = picks;
+}
+
+function renderCompare(picks = state.picks) {
+  const box = $('cmp-result');
+  const L1 = layer();
+  if (!L1.place || !CONTENT[state.layerId].compareRows) { box.innerHTML = `<p>${esc(t('layer_no_compare'))}</p>`; return; }
+  if (!picks || !picks.a || !picks.b) { box.innerHTML = `<p>${esc(t('compare_need'))}</p>`; return; }
+  const c = content();
+  const cols = [picks.a, picks.b].map((country) => {
+    const st = summarize(L1, geo.pixelsOf(country.id, { coastal: !!L1.coastal }));
+    const stFixed = L1.coastal && !geo.pixelsOf(country.id, { coastal: true }).length ? { noCoast: true, empty: true } : st;
+    return { country, st: stFixed, rows: c.compareRows(stFixed) || [] };
+  });
+  const head = cols.map((col, i) => `<th scope="col">${esc(L(col.country))}
+      <p class="cmp-phrase">${esc(c.summaryText(col.st, L(col.country)))}</p>
+      <button type="button" class="btn btn-small" data-listen="${i}">${esc(t('listen'))}<span class="sr-only"> ${esc(L(col.country))}</span></button></th>`).join('');
+  const nRows = Math.max(1, ...cols.map((col) => col.rows.length));
+  let body = '';
+  for (let r = 0; r < nRows; r++) {
+    const row = cols[0].rows[r] || cols[1].rows[r];
+    if (!row) continue;
+    body += `<tr><th scope="row">${esc(row[0])}</th>${cols.map((col) => `<td>${esc(col.rows[r] ? col.rows[r][1] : '—')}</td>`).join('')}</tr>`;
+  }
+  box.innerHTML = `<table class="cmp-table"><caption class="sr-only">${esc(t('compare'))}: ${esc(layerName(state.layerId))}</caption>
+    <thead><tr><th scope="col">${esc(layerName(state.layerId))}</th>${head}</tr></thead><tbody>${body}</tbody></table>`;
+  box.querySelectorAll('[data-listen]').forEach((b) => b.addEventListener('click', () => hearCountry(cols[+b.dataset.listen].country)));
+}
+
 
 function surprise() {
   engine.ensure();
   const L1 = layer();
-  const ok = PLACES.filter((p) => L1.sample(p.lat, p.lon).hasData);
+  const ok = PLACES.filter((p) => audible(L1.sample(p.lat, p.lon)));
   if (!ok.length) { announce(t('quiet_here')); return; }
   const p = ok[Math.floor(Math.random() * ok.length)];
-  const s = goTo(p.lat, p.lon);
+  hideSummary();
+  view.setOutline(null);
+  view.fitBounds(p.lon - 6, p.lat - 4, p.lon + 6, p.lat + 4);
+  const s = goTo(p.lat, p.lon, { placeText: L(p) });
   const msg = `${t('voice_surprise', { place: L(p) })} ${content().phrase(s)}`;
   announce(msg);
 }
@@ -367,7 +535,16 @@ function openDialog(id) {
 function renderDialog(id) {
   if (id === 'dlg-how') $('dlg-how-body').innerHTML = howToHTML();
   if (id === 'dlg-help') $('dlg-help-body').innerHTML = shortcutsHTML();
-  if (id === 'dlg-about') $('dlg-about-body').innerHTML = aboutHTML(LAYERS.air.meta);
+  if (id === 'dlg-about') {
+    const metas = {};
+    Object.values(LAYERS).forEach((l) => { metas[l.id] = l.meta; });
+    $('dlg-about-body').innerHTML = aboutHTML(metas);
+    Promise.all(Object.values(LAYERS).map((l) => l.load())).then(() => {
+      Object.values(LAYERS).forEach((l) => { metas[l.id] = l.meta; });
+      if ($(id).open) $('dlg-about-body').innerHTML = aboutHTML(metas);
+    }).catch(() => {});
+  }
+  if (id === 'dlg-compare') renderCompare();
 }
 document.querySelectorAll('dialog').forEach((d) => {
   d.addEventListener('click', (e) => {
@@ -406,7 +583,8 @@ onLangChange(() => {
   updatePlayButton();
   if (state.screen === 'explorer') {
     renderLayerInfo();
-    if (state.last) present(state.last, { announceIt: false, rotateFact: false }); else resetPanel();
+    if (state.last) present(state.last, { announceIt: false, rotateFact: false, placeText: state.placeText }); else resetPanel();
+    if (state.summary) showSummary(state.summary.place, state.summary.st);
   }
   document.querySelectorAll('dialog[open]').forEach((d) => renderDialog(d.id));
   updateSheetText();
@@ -462,6 +640,9 @@ document.addEventListener('keydown', (e) => {
   else if (k === 'w' || k === 'W') whereAmI();
   else if (k === 'i' || k === 'I') readPanel();
   else if (k === 'r' || k === 'R') speak(lastUtterance(), getLang());
+  else if (k === '/') { e.preventDefault(); $('search').focus(); }
+  else if ((k === '+' || k === '=') && e.target !== $('map')) view.zoomBy(2);
+  else if ((k === '-' || k === '_') && e.target !== $('map')) view.zoomBy(0.5);
 });
 
 // ---------------------------------------------------------------------------------
@@ -477,6 +658,10 @@ $('btn-stop').addEventListener('click', stopAll);
 $('btn-scale').addEventListener('click', hearScale);
 $('btn-sweep').addEventListener('click', landscapeSweep);
 $('btn-surprise').addEventListener('click', surprise);
+$('btn-compare').addEventListener('click', () => openDialog('dlg-compare'));
+$('btn-zoom-in').addEventListener('click', () => view.zoomBy(2));
+$('btn-zoom-out').addEventListener('click', () => view.zoomBy(0.5));
+$('btn-zoom-reset').addEventListener('click', () => { view.resetView(); view.setOutline(null); });
 $('vol').addEventListener('input', (e) => setVolume(+e.target.value));
 document.querySelectorAll('input[name="speed"]').forEach((r) => {
   r.checked = r.value === state.speed;
@@ -495,6 +680,7 @@ updatePlayButton();
 updateSheetText();
 $('planet').style.backgroundImage = "url('data/air/texture.jpg')";
 LAYERS.air.load().catch(() => {});
+geo.load().then(initSearch).catch((e) => console.error(e));
 
 // test hook for the headless checks
-window.__eis = { state, engine, selectLayer, goTo, LAYERS };
+window.__eis = { state, engine, selectLayer, goTo, LAYERS, geo, hearCountry, summarize, searchPlaces };

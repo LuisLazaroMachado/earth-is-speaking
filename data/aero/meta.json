@@ -1,0 +1,61 @@
+{
+  "layer": "aero",
+  "source_page": "https://svs.gsfc.nasa.gov/5669",
+  "source_file": "https://svs.gsfc.nasa.gov/vis/a000000/a005600/a005669/Aerosols_2025-08-19T20_00_00_1920x1080.png",
+  "date_label": "19 Aug 2025, 20:00 UTC",
+  "categories": [
+    "blackcarbon",
+    "dust",
+    "seasalt",
+    "sulfate"
+  ],
+  "width": 1920,
+  "height": 1080,
+  "thresholds": {
+    "value_min": 50,
+    "sat_min": 0.28,
+    "mix_share_min": 0.3
+  },
+  "validation": {
+    "legend_rgb": {
+      "blackcarbon": [
+        210,
+        94,
+        69
+      ],
+      "dust": [
+        193,
+        154,
+        220
+      ],
+      "seasalt": [
+        133,
+        170,
+        169
+      ],
+      "sulfate": [
+        83,
+        220,
+        52
+      ]
+    },
+    "hue_centers_deg": {
+      "blackcarbon": 10.600000381469727,
+      "dust": 275.5,
+      "seasalt": 204.6999969482422,
+      "sulfate": 108.9000015258789
+    },
+    "legend_hue_centers_deg": {
+      "blackcarbon": 10.600000381469727,
+      "dust": 275.5,
+      "seasalt": 178.39999389648438,
+      "sulfate": 108.9000015258789
+    },
+    "classified_pct_area_weighted": 40.4,
+    "mixed_pct_of_classified": 16.9,
+    "blackcarbon_pct_of_classified_area": 7.1,
+    "dust_pct_of_classified_area": 8.9,
+    "seasalt_pct_of_classified_area": 29.3,
+    "sulfate_pct_of_classified_area": 54.6
+  }
+}

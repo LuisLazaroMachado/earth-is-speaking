@@ -19,6 +19,7 @@ export class MapView {
     this.outline = null; // GeoJSON geometry (Polygon/MultiPolygon)
     this.sweepLon = null;
     this.hoverEnabled = false;
+    this.vp = { x0: 0, y0: 0, w: 1, h: 1 }; // visible part of the world, as fractions
     this._down = null;
     this._lastDrag = 0;
     this._bind();
@@ -59,8 +60,8 @@ export class MapView {
 
   toLatLon(clientX, clientY) {
     const r = this.canvas.getBoundingClientRect();
-    const fx = (clientX - r.left) / r.width;
-    const fy = (clientY - r.top) / r.height;
+    const fx = this.vp.x0 + ((clientX - r.left) / r.width) * this.vp.w;
+    const fy = this.vp.y0 + ((clientY - r.top) / r.height) * this.vp.h;
     return {
       lat: Math.max(-89.99, Math.min(89.99, 90 - fy * 180)),
       lon: Math.max(-179.99, Math.min(179.99, fx * 360 - 180)),
@@ -68,7 +69,48 @@ export class MapView {
   }
 
   toXY(lat, lon) {
-    return { x: ((lon + 180) / 360) * this.canvas.width, y: ((90 - lat) / 180) * this.canvas.height };
+    const fx = ((lon + 180) / 360 - this.vp.x0) / this.vp.w;
+    const fy = ((90 - lat) / 180 - this.vp.y0) / this.vp.h;
+    return { x: fx * this.canvas.width, y: fy * this.canvas.height };
+  }
+
+  // ---- zoom (the view keeps the 2:1 shape, so vp.w === vp.h) ------------------------
+
+  get zoom() { return 1 / this.vp.w; }
+
+  _setVp(cx, cy, size) {
+    const w = Math.max(1 / 16, Math.min(1, size));
+    const x0 = Math.max(0, Math.min(1 - w, cx - w / 2));
+    const y0 = Math.max(0, Math.min(1 - w, cy - w / 2));
+    this.vp = { x0, y0, w, h: w };
+    this.draw();
+  }
+
+  /** Zoom by a factor around a lat/lon (default: the centre of the view). */
+  zoomBy(factor, lat, lon) {
+    const c = lat === undefined ? { cx: this.vp.x0 + this.vp.w / 2, cy: this.vp.y0 + this.vp.h / 2 }
+      : { cx: (lon + 180) / 360, cy: (90 - lat) / 180 };
+    this._setVp(c.cx, c.cy, this.vp.w / factor);
+  }
+
+  resetView() { this.vp = { x0: 0, y0: 0, w: 1, h: 1 }; this.draw(); }
+
+  /** Show a lat/lon box with some margin. */
+  fitBounds(minLon, minLat, maxLon, maxLat, minSize = 1 / 12) {
+    const fx0 = (minLon + 180) / 360, fx1 = (maxLon + 180) / 360;
+    const fy0 = (90 - maxLat) / 180, fy1 = (90 - minLat) / 180;
+    const size = Math.max(fx1 - fx0, fy1 - fy0) * 1.35;
+    this._setVp((fx0 + fx1) / 2, (fy0 + fy1) / 2, Math.max(minSize, size));
+  }
+
+  /** Keep a point inside the view (used when the keyboard cursor moves while zoomed). */
+  ensureVisible(lat, lon) {
+    if (this.vp.w >= 1) return;
+    const fx = (lon + 180) / 360, fy = (90 - lat) / 180;
+    const m = this.vp.w * 0.1;
+    if (fx < this.vp.x0 + m || fx > this.vp.x0 + this.vp.w - m || fy < this.vp.y0 + m || fy > this.vp.y0 + this.vp.h - m) {
+      this._setVp(fx, fy, this.vp.w);
+    }
   }
 
   // ---- input -----------------------------------------------------------------------
@@ -114,16 +156,25 @@ export class MapView {
     };
     c.addEventListener('pointerup', end);
     c.addEventListener('pointercancel', end);
+    c.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      const p = this.toLatLon(e.clientX, e.clientY);
+      this.zoomBy(e.deltaY < 0 ? 1.25 : 0.8, p.lat, p.lon);
+    }, { passive: false });
 
     this.el.addEventListener('keydown', (e) => {
       const step = e.shiftKey ? 10 : 2;
       let { lat, lon } = this.cursor;
       let moved = true;
+      const z = this.vp.w < 1 ? Math.max(0.25, this.vp.w) : 1; // finer steps when zoomed in
+      const st = Math.max(0.25, step * z);
       switch (e.key) {
-        case 'ArrowUp': lat = Math.min(89, lat + step); break;
-        case 'ArrowDown': lat = Math.max(-89, lat - step); break;
-        case 'ArrowLeft': lon -= step; break;
-        case 'ArrowRight': lon += step; break;
+        case 'ArrowUp': lat = Math.min(89, lat + st); break;
+        case 'ArrowDown': lat = Math.max(-89, lat - st); break;
+        case 'ArrowLeft': lon -= st; break;
+        case 'ArrowRight': lon += st; break;
+        case '+': case '=': e.preventDefault(); this.zoomBy(2, this.cursor.lat, this.cursor.lon); this.cb.onZoom && this.cb.onZoom(); return;
+        case '-': case '_': e.preventDefault(); this.zoomBy(0.5); this.cb.onZoom && this.cb.onZoom(); return;
         case 'Enter':
           e.preventDefault();
           this.cursor.visible = true;
@@ -144,6 +195,7 @@ export class MapView {
 
   setCursor(lat, lon) {
     this.cursor = { lat, lon, visible: true };
+    this.ensureVisible(lat, lon);
     this.draw();
   }
 
@@ -169,7 +221,9 @@ export class MapView {
     if (this.img) {
       ctx.imageSmoothingEnabled = true;
       ctx.imageSmoothingQuality = 'high';
-      ctx.drawImage(this.img, 0, 0, W, H);
+      const iw = this.img.naturalWidth, ih = this.img.naturalHeight;
+      ctx.imageSmoothingEnabled = this.vp.w > 0.25;
+      ctx.drawImage(this.img, this.vp.x0 * iw, this.vp.y0 * ih, this.vp.w * iw, this.vp.h * ih, 0, 0, W, H);
     }
 
     if (this.outline) this._drawOutline(dpr);

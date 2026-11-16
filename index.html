@@ -74,9 +74,23 @@
         <h2 id="stage-h" class="sr-only"></h2>
         <div class="stage-toolbar">
           <div class="view-switch" id="view-switch" role="group"></div>
-          <div id="search-slot"></div>
-          <span class="toolbar-spacer"></span>
+          <div class="search" role="search">
+            <label for="search" class="sr-only" data-i18n="search_label">Search a place</label>
+            <div class="combo">
+              <input id="search" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false"
+                     aria-controls="search-list" autocomplete="off" spellcheck="false" data-i18n-attr="placeholder:search_ph">
+              <ul id="search-list" class="combo-list" role="listbox" data-i18n-attr="aria-label:search_label" hidden></ul>
+            </div>
+            <button type="button" class="btn btn-secondary btn-small" id="btn-compare" data-i18n="compare">Compare</button>
+          </div>
           <button type="button" class="btn btn-secondary btn-small" id="btn-surprise" data-i18n="surprise">Surprise me</button>
+          <span class="toolbar-spacer"></span>
+          <div class="zoom" role="group" data-i18n-attr="aria-label:zoom_group">
+            <button type="button" class="btn btn-secondary btn-small icon-btn" id="btn-zoom-in" data-i18n-attr="aria-label:zoom_in;title:zoom_in">+</button>
+            <button type="button" class="btn btn-secondary btn-small icon-btn" id="btn-zoom-out" data-i18n-attr="aria-label:zoom_out;title:zoom_out">−</button>
+            <button type="button" class="btn btn-secondary btn-small" id="btn-zoom-reset" data-i18n="zoom_reset">World</button>
+          </div>
+          <p id="search-status" class="sr-only" aria-live="polite"></p>
         </div>
         <p id="latest-banner" class="latest-banner" hidden></p>
         <div id="map" class="map" tabindex="0" role="application" aria-describedby="map-help">
@@ -96,6 +110,10 @@
         <div id="panel-body">
           <div class="phrase-row"><span id="p-icon"></span><p id="p-phrase" class="phrase" data-i18n="panel_empty"></p></div>
           <p id="p-place" class="place"></p>
+          <section class="summary" id="p-summary" aria-labelledby="p-summary-h" hidden>
+            <h3 id="p-summary-h"></h3>
+            <p id="p-summary-text"></p>
+          </section>
           <section class="dyk" aria-labelledby="dyk-h" id="p-dyk" hidden>
             <h3 id="dyk-h" data-i18n="did_you_know">Did you know?</h3>
             <p id="p-fact"></p>
@@ -158,6 +176,27 @@
     <div class="dlg-head"><h2 id="dlg-about-h" data-i18n="about">About &amp; methods</h2>
       <button type="button" class="btn btn-secondary btn-small" data-close data-i18n="close">Close</button></div>
     <div class="dlg-body" id="dlg-about-body"></div>
+  </dialog>
+
+  <dialog id="dlg-compare" aria-labelledby="dlg-compare-h">
+    <div class="dlg-head"><h2 id="dlg-compare-h" data-i18n="compare">Compare</h2>
+      <button type="button" class="btn btn-secondary btn-small" data-close data-i18n="close">Close</button></div>
+    <div class="dlg-body">
+      <p data-i18n="compare_pick">Choose two places</p>
+      <div class="compare-pick">
+        <div class="combo">
+          <label for="cmp-a" data-i18n="compare_a">First country</label>
+          <input id="cmp-a" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmp-a-list" autocomplete="off" spellcheck="false">
+          <ul id="cmp-a-list" class="combo-list" role="listbox" hidden></ul>
+        </div>
+        <div class="combo">
+          <label for="cmp-b" data-i18n="compare_b">Second country</label>
+          <input id="cmp-b" type="text" role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="cmp-b-list" autocomplete="off" spellcheck="false">
+          <ul id="cmp-b-list" class="combo-list" role="listbox" hidden></ul>
+        </div>
+      </div>
+      <div id="cmp-result" aria-live="polite"></div>
+    </div>
   </dialog>
 
   <script type="module" src="js/main.js"></script>

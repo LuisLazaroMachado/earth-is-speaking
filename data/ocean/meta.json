@@ -1,0 +1,37 @@
+{
+  "layer": "ocean",
+  "source_page": "https://svs.gsfc.nasa.gov/5479",
+  "source_file": "https://svs.gsfc.nasa.gov/vis/a000000/a005400/a005479/perpetual_ocean2_EQUIREC_072_FINAL15_SOS_temperature_1024p30.mp4",
+  "frame_label": "07 Jun 2023 21:31",
+  "frame_counter": 15460,
+  "model_years": "2021-2023",
+  "width": 2048,
+  "height": 1024,
+  "masks": [
+    [
+      0,
+      980,
+      230,
+      1024
+    ],
+    [
+      1770,
+      980,
+      2048,
+      1024
+    ]
+  ],
+  "validation": {
+    "frame_time_s": 61.02,
+    "background_rgb": [
+      39.0,
+      52.0,
+      91.0
+    ],
+    "p99_raw_index": 73.07,
+    "ocean_pixels": 1330596,
+    "ice_pixels_over_water": 18548,
+    "share_index_gt_0_5_area_weighted": 9.91,
+    "median_index": 0.141
+  }
+}

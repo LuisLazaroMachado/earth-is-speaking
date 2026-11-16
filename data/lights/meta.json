@@ -1,0 +1,42 @@
+{
+  "layer": "lights",
+  "source_page": "https://svs.gsfc.nasa.gov/5276",
+  "source_file": "https://svs.gsfc.nasa.gov/vis/a000000/a005200/a005276/nightlights_flat_change_cb_still_8k.00700.jpg",
+  "period": "2012 to 2023",
+  "width": 1920,
+  "height": 1080,
+  "codes": {
+    "none": 0,
+    "less": [
+      1,
+      127
+    ],
+    "more": [
+      128,
+      255
+    ]
+  },
+  "legend_mask_8k": [
+    2800,
+    2860,
+    4200,
+    3180
+  ],
+  "rules": {
+    "more": "B-R>15 and (R+B)/2-G>10 and brightness>60",
+    "less": "R-G>20 and G-B>10 and brightness>90"
+  },
+  "validation": {
+    "full_res_more_pixels": 84169,
+    "full_res_less_pixels": 17685,
+    "full_res_more_pct": 0.254,
+    "full_res_less_pct": 0.053,
+    "grid_more_cells": 19807,
+    "grid_less_cells": 5103,
+    "grid_more_pct": 0.955,
+    "grid_less_pct": 0.246,
+    "grid_more_pct_of_land_area_weighted": 5.72,
+    "grid_less_pct_of_land_area_weighted": 1.34,
+    "land_like_cells_pct": 28.4
+  }
+}
