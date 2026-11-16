@@ -116,5 +116,50 @@ const aero = makeLayer({
   },
 });
 
-export const LAYERS = { air, lights, ocean, aero };
-export const LAYER_ORDER = ['air', 'lights', 'ocean', 'aero'];
+// ---------------------------------------------------------------------------------
+// 5-6. Global views: globes already rendered by NASA with a fixed camera. There is no
+// latitude/longitude here. The map view passes picture positions using the same two
+// numbers it uses for lat/lon (u = (lon + 180) / 360, v = (90 - lat) / 180), so the
+// input code is shared; these layers never report a place or coordinates.
+// ---------------------------------------------------------------------------------
+function pictureCell(grid, lat, lon) {
+  const u = Math.min(0.9999, Math.max(0, (lon + 180) / 360));
+  const v = Math.min(0.9999, Math.max(0, (90 - lat) / 180));
+  return Math.floor(v * grid.height) * grid.width + Math.floor(u * grid.width);
+}
+const GLOBAL_SWEEP_LATS = [0.25, 0.42, 0.58, 0.75].map((v) => 90 - v * 180); // rows at 25/42/58/75 % height
+
+const forest = makeLayer({
+  id: 'forest', num: 5, type: 'trend', place: false, globe: false, view: 'global', aspect: 16 / 9,
+  image: 'data/forest/view.jpg', sweepLats: GLOBAL_SWEEP_LATS,
+  gridUrl: 'data/forest/grid.png', metaUrl: 'data/forest/meta.json',
+  decode(code) {
+    if (code === 0) return { hasData: false };
+    const height = (code - 1) / 254;
+    return { hasData: true, height, level: height >= 0.5 ? 'tall' : height >= 0.2 ? 'medium' : 'low' };
+  },
+  sample(lat, lon) { return { layer: 'forest', lat, lon, ...this.decode(this.grid.data[pictureCell(this.grid, lat, lon)]) }; },
+  scaleSteps() {
+    return [0, 0.14, 0.28, 0.42, 0.57, 0.71, 0.85, 1].map((h) => ({ layer: 'forest', lat: 0, lon: 0, hasData: true,
+      height: h, level: h >= 0.5 ? 'tall' : h >= 0.2 ? 'medium' : 'low' }));
+  },
+});
+
+const lightning = makeLayer({
+  id: 'lightning', num: 6, type: 'density', place: false, globe: false, view: 'global', aspect: 16 / 9,
+  image: 'data/lightning/view.jpg', sweepLats: GLOBAL_SWEEP_LATS,
+  gridUrl: 'data/lightning/grid.png', metaUrl: 'data/lightning/meta.json',
+  decode(code) {
+    if (code === 0) return { hasData: true, density: 0, level: 'none' };
+    const density = (code - 1) / 254;
+    return { hasData: true, density, level: density >= 0.4 ? 'many' : 'some' };
+  },
+  sample(lat, lon) { return { layer: 'lightning', lat, lon, ...this.decode(this.grid.data[pictureCell(this.grid, lat, lon)]) }; },
+  scaleSteps() {
+    return [0.02, 0.15, 0.3, 0.45, 0.6, 0.75, 0.9, 1].map((d) => ({ layer: 'lightning', lat: 0, lon: 0, hasData: true,
+      density: d, level: d >= 0.4 ? 'many' : 'some' }));
+  },
+});
+
+export const LAYERS = { air, lights, ocean, aero, forest, lightning };
+export const LAYER_ORDER = ['air', 'lights', 'ocean', 'aero', 'forest', 'lightning'];

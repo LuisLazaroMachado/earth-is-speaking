@@ -21,7 +21,7 @@ export const CARD_ORDER = ['air', 'lights', 'ocean', 'aero', 'forest', 'lightnin
 const NAME_KEY = { air: 'layer_air', lights: 'layer_lights', ocean: 'layer_ocean', aero: 'layer_aero', forest: 'layer_forest', lightning: 'layer_light' };
 const TYPE = { air: 'measured', lights: 'trend', ocean: 'trend', aero: 'category', forest: 'trend', lightning: 'density' };
 const CARD_IMG = { air: 'data/cards/air.jpg', latest: 'data/cards/latest.jpg', lights: 'data/cards/lights.jpg',
-  ocean: 'data/cards/ocean.jpg', aero: 'data/cards/aero.jpg' };
+  ocean: 'data/cards/ocean.jpg', aero: 'data/cards/aero.jpg', forest: 'data/cards/forest.jpg', lightning: 'data/cards/lightning.jpg' };
 const SWEEP_MS = { slow: 32000, normal: 16000, fast: 8000 };
 const GAP = { slow: 1.6, normal: 1, fast: 0.6 };
 
@@ -64,11 +64,18 @@ export function placeLabel(lat, lon) {
   return t('coords', c);
 }
 
+/** Place text for a sample: global views never have a place. */
+export function placeOf(s) {
+  if (LAYERS[s.layer] && LAYERS[s.layer].view === 'global') return t('global_no_place');
+  return placeLabel(s.lat, s.lon);
+}
+
 /** True when a sample makes a sound in its layer. */
 export function audible(s) {
   if (!s || !s.hasData) return false;
   if (s.layer === 'lights') return s.kind === 'more' || s.kind === 'less';
   if (s.layer === 'aero') return !!s.cat;
+  if (s.layer === 'lightning') return s.density > 0;
   return true;
 }
 
@@ -120,7 +127,7 @@ const view = new MapView($('map'), {
 function summaryLine(s) {
   const c = CONTENT[s.layer];
   const v = c.shortValue ? c.shortValue(s) : '';
-  return `${state.placeText || placeLabel(s.lat, s.lon)}. ${c.phrase(s)}${v ? ' ' + v + '.' : ''}`;
+  return `${state.placeText || placeOf(s)}. ${c.phrase(s)}${v ? ' ' + v + '.' : ''}`;
 }
 
 function hideSummary() { $('p-summary').hidden = true; state.summary = null; }
@@ -139,7 +146,7 @@ function present(s, { announceIt = true, rotateFact = true, placeText = null } =
   $('p-icon').innerHTML = icon(s.layer);
   $('p-phrase').textContent = c.phrase(s);
   $('p-phrase').removeAttribute('data-i18n');
-  $('p-place').textContent = placeText || placeLabel(s.lat, s.lon);
+  $('p-place').textContent = placeText || placeOf(s);
   if (rotateFact || !state.fact) state.fact = nextFact(s.layer, s);
   $('p-dyk').hidden = !state.fact;
   $('p-fact').textContent = state.fact ? L(state.fact) : '';
@@ -161,8 +168,11 @@ function renderLayerInfo() {
   $('map').setAttribute('aria-label', t('map_label', { layer: layerName(state.layerId) }));
   $('stage-h').textContent = layerName(state.layerId);
   const vs = $('view-switch');
-  vs.setAttribute('aria-label', t('view_map'));
-  vs.innerHTML = `<span>${t('view_map')}</span>`;
+  const global = layer().view === 'global';
+  vs.setAttribute('aria-label', global ? t('view_global') : t('view_map'));
+  vs.innerHTML = `<span>${global ? t('view_global') : t('view_map')}</span>`;
+  document.querySelector('.zoom').hidden = global;
+  $('map-help').textContent = global ? `${t('global_hint')} ${t('map_help')}` : t('map_help');
   const banner = $('latest-banner');
   banner.hidden = !state.latest;
   if (state.latest && meta) banner.textContent = `${t('latest_label')}: ${meta.frame_label}`;
@@ -225,10 +235,19 @@ export async function selectLayer(id, { latest = false, quiet = false } = {}) {
   const L1 = LAYERS[id];
   if (!L1) { announce(`${layerName(id)}. ${t('layer_soon')}`); return false; }
   engine.stopAll();
+  const wasGlobal = layer().view === 'global';
   state.layerId = id;
   state.latest = latest;
   markCurrentCard();
   await L1.load();
+  const isGlobal = L1.view === 'global';
+  if (isGlobal !== wasGlobal || view.global !== isGlobal) {
+    view.setGlobal(isGlobal);
+    view.setTemp(null);
+    view.setCursor(0, 0);
+    state.last = null;
+    state.summary = null;
+  }
   const ok = await view.setImage(L1.image);
   $('map-error').hidden = ok;
   renderLayerInfo();
@@ -311,8 +330,8 @@ export function landscapeSweep() {
   const total = SWEEP_MS[state.speed];
   const cols = 64;
   const colMs = total / cols;
-  const lats = [60, 20, -20, -60];
   const L1 = layer();
+  const lats = L1.sweepLats || [60, 20, -20, -60];
   const steps = [];
   for (let c = 0; c < cols; c++) {
     const lon = -180 + ((c + 0.5) * 360) / cols;
@@ -387,8 +406,26 @@ export function searchPlaces(q, { countriesOnly = false } = {}) {
   return out.sort((a, b) => b.sc - a.sc || a.label.localeCompare(b.label));
 }
 
+/** Global-view layers cannot be heard by place: say so and offer another layer. */
+function offerOtherLayer(item) {
+  engine.stopAll();
+  $('p-summary').hidden = false;
+  $('p-summary-h').textContent = t('no_place_layer');
+  const p = $('p-summary-text');
+  p.textContent = '';
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'btn btn-small';
+  b.textContent = `${t('other_layer')}: ${item.label} (${layerName('air')})`;
+  b.addEventListener('click', async () => { await selectLayer('air'); choosePlace(item); });
+  p.appendChild(b);
+  state.summary = null;
+  announce(`${t('no_place_layer')} ${t('other_layer')}.`);
+}
+
 export async function choosePlace(item) {
   engine.ensure();
+  if (layer().view === 'global') { offerOtherLayer(item); return null; }
   if (item.kind === 'country') return hearCountry(item.data);
   const p = item.data;
   hideSummary();
@@ -486,6 +523,19 @@ function renderCompare(picks = state.picks) {
 function surprise() {
   engine.ensure();
   const L1 = layer();
+  if (L1.view === 'global') {
+    for (let i = 0; i < 400; i++) {
+      const lat = 80 - Math.random() * 160;
+      const lon = -170 + Math.random() * 340;
+      if (audible(L1.sample(lat, lon))) {
+        const s = goTo(lat, lon);
+        announce(`${t('global_no_place')}. ${content().phrase(s)}`);
+        return;
+      }
+    }
+    announce(t('quiet_here'));
+    return;
+  }
   const ok = PLACES.filter((p) => audible(L1.sample(p.lat, p.lon)));
   if (!ok.length) { announce(t('quiet_here')); return; }
   const p = ok[Math.floor(Math.random() * ok.length)];
@@ -617,6 +667,8 @@ $('sheet-handle').addEventListener('click', () => { $('panel').classList.toggle(
 function measureBar() {
   const h = $('controlbar').getBoundingClientRect().height;
   document.documentElement.style.setProperty('--bar-h', `${Math.ceil(h)}px`);
+  const top = document.querySelector('.topbar').getBoundingClientRect().height;
+  document.documentElement.style.setProperty('--top-h', `${Math.ceil(top)}px`);
 }
 window.addEventListener('resize', measureBar);
 

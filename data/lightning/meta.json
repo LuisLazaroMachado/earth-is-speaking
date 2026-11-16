@@ -1,0 +1,15 @@
+{
+  "layer": "lightning",
+  "source_page": "https://svs.gsfc.nasa.gov/5011",
+  "source_file": "https://svs.gsfc.nasa.gov/vis/a000000/a005000/a005011/iss_lightning_preview.jpg",
+  "window_days": 10,
+  "years": "2017-2023",
+  "width": 1024,
+  "height": 576,
+  "rule": "R>200, G>150, B<120; density within 40 px",
+  "validation": {
+    "yellow_pixels": 470,
+    "pct_area_with_events_within_40px": 9.9,
+    "p99_density": 192.0
+  }
+}

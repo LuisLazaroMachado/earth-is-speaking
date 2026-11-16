@@ -136,6 +136,11 @@ button, input, select { font: inherit; color: inherit; }
 
 /* layer cards */
 .layer-nav { padding: 16px; border-right: 1px solid var(--line); }
+@media (min-width: 961px) {
+  /* side columns scroll on their own so the map always stays in view */
+  .layer-nav, .panel, .stage { position: sticky; top: var(--top-h, 69px); align-self: start;
+    max-height: calc(100vh - var(--top-h, 69px) - var(--bar-h, 70px)); overflow-y: auto; }
+}
 .nav-title { font-size: 1.05rem; color: var(--muted); font-weight: 600; margin: 0 0 12px; }
 .cards { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
 .card {
@@ -173,6 +178,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .map { position: relative; width: 100%; border-radius: 12px; overflow: hidden; background: #020a1f; border: 1px solid var(--line); }
 .map canvas { display: block; width: 100%; aspect-ratio: 2 / 1; touch-action: none; cursor: crosshair; }
+.map.global canvas { aspect-ratio: 16 / 9; }
 .map:focus-visible { outline: var(--focus); outline-offset: 3px; }
 .map-error { position: absolute; inset: 0; display: grid; place-items: center; font-size: 1.2rem; }
 .map-help { color: var(--muted); font-size: 1rem; }

@@ -78,6 +78,15 @@ export class MapView {
 
   get zoom() { return 1 / this.vp.w; }
 
+  /** Global view: a fixed NASA globe picture (16:9), no zoom, no geography. */
+  setGlobal(on) {
+    this.global = !!on;
+    this.el.classList.toggle('global', this.global);
+    this.vp = { x0: 0, y0: 0, w: 1, h: 1 };
+    this.outline = null;
+    this.resize();
+  }
+
   _setVp(cx, cy, size) {
     const w = Math.max(1 / 16, Math.min(1, size));
     const x0 = Math.max(0, Math.min(1 - w, cx - w / 2));
@@ -88,6 +97,7 @@ export class MapView {
 
   /** Zoom by a factor around a lat/lon (default: the centre of the view). */
   zoomBy(factor, lat, lon) {
+    if (this.global) return;
     const c = lat === undefined ? { cx: this.vp.x0 + this.vp.w / 2, cy: this.vp.y0 + this.vp.h / 2 }
       : { cx: (lon + 180) / 360, cy: (90 - lat) / 180 };
     this._setVp(c.cx, c.cy, this.vp.w / factor);
@@ -97,6 +107,7 @@ export class MapView {
 
   /** Show a lat/lon box with some margin. */
   fitBounds(minLon, minLat, maxLon, maxLat, minSize = 1 / 12) {
+    if (this.global) return;
     const fx0 = (minLon + 180) / 360, fx1 = (maxLon + 180) / 360;
     const fy0 = (90 - maxLat) / 180, fy1 = (90 - minLat) / 180;
     const size = Math.max(fx1 - fx0, fy1 - fy0) * 1.35;

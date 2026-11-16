@@ -30,6 +30,7 @@ stored in `data/`. The browser never reads NASA files directly.
 | Night lights change 2012-2023 | `python scripts/prep_lights.py` | NASA SVS 5276 (Black Marble, Suomi NPP VIIRS) |
 | Ocean currents (trend) | `python scripts/prep_ocean.py` (after prep_geo) | NASA SVS 5479 (ECCO-2, NASA/JPL, MIT) |
 | Aerosols | `python scripts/prep_aero.py` | NASA SVS 5669 (GEOS, GMAO) |
+| Forest height + Lightning (global views) | `python scripts/prep_global.py` | NASA SVS 4950 (GEDI), SVS 5011 (ISS LIS) |
 | Card images | `python scripts/prep_cards.py` | crops of the layer images |
 
 Debug images for visual checks are written to `debug/`. Validation numbers for each layer are

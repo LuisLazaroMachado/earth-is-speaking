@@ -1,0 +1,24 @@
+{
+  "layer": "forest",
+  "source_page": "https://svs.gsfc.nasa.gov/4950",
+  "source_file": "https://svs.gsfc.nasa.gov/vis/a000000/a004900/a004950/GEDI_global.0900_print.jpg",
+  "colorbar": "https://svs.gsfc.nasa.gov/vis/a000000/a004900/a004950/GEDI_colorbar_0to50_01_print.jpg",
+  "width": 1024,
+  "height": 576,
+  "validation": {
+    "land_pixels": 117165,
+    "matched_pct_of_land": 98.6,
+    "median_rel_height": 0.126,
+    "tall_pct_of_matched": 10.3,
+    "bar_first_rgb": [
+      77.0,
+      61.0,
+      38.0
+    ],
+    "bar_last_rgb": [
+      253.0,
+      239.0,
+      228.0
+    ]
+  }
+}

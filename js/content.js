@@ -398,10 +398,112 @@ export const AEROC = {
 };
 
 // ---------------------------------------------------------------------------------
+// Forest height (trend, global view)
+// ---------------------------------------------------------------------------------
+export const FOREST = {
+  phrase(s) {
+    if (!s.hasData) return es() ? 'Aquí no hay datos de bosque.' : 'No forest data here.';
+    if (s.level === 'tall') return es() ? 'Aquí crecen árboles altos.' : 'Tall trees grow here.';
+    if (s.level === 'medium') return es() ? 'Aquí hay bosque de altura media.' : 'Medium-height forest here.';
+    return es() ? 'Aquí hay plantas bajas o huecos entre mediciones.' : 'Short plants or gaps between measurements here.';
+  },
+  value(s) {
+    if (!s.hasData) return es() ? 'Océano o espacio (silencio)' : 'Ocean or space (silent)';
+    const lv = { tall: 'level_high', medium: 'level_medium', low: 'level_low' }[s.level];
+    const extra = s.level === 'low' ? (es() ? ' Vegetación baja o huecos entre las trazas de medición.' : ' Low vegetation or gaps between measurement tracks.') : '';
+    return `${t('relative_strength', { level: t(lv) })}.${extra}`;
+  },
+  shortValue() { return ''; },
+  sound(s) {
+    if (!s.hasData) return es() ? 'Silencio.' : 'Silence.';
+    if (s.level === 'tall') return es() ? 'Campana aguda: árboles altos.' : 'High bell: tall trees.';
+    if (s.level === 'medium') return es() ? 'Campana media sobre un zumbido suave.' : 'Middle bell over a soft hum.';
+    return es() ? 'Zumbido grave y suave: vegetación baja.' : 'Low soft hum: low vegetation.';
+  },
+  scaleLabel(s) {
+    const lv = s.height >= 0.85 ? 3 : s.height >= 0.5 ? 2 : s.height >= 0.2 ? 1 : 0;
+    const L4 = es() ? ['Vegetación baja', 'Bosque medio', 'Bosque alto', 'Árboles muy altos'] : ['Low vegetation', 'Medium forest', 'Tall forest', 'Very tall trees'];
+    return L4[lv];
+  },
+  range() { return es() ? 'De vegetación baja a árboles altos (relativo, sin metros).' : 'From low vegetation to tall trees (relative, no meters).'; },
+  source() {
+    return es() ? 'NASA SVS 4950 · GEDI, láser (lidar) en la Estación Espacial Internacional. Barra de referencia: 0 a 50 m.'
+      : 'NASA SVS 4950 · GEDI, a laser (lidar) on the International Space Station. Reference bar: 0 to 50 m.';
+  },
+  date() { return es() ? 'Alrededor de un año de mediciones de GEDI (2018–2020)' : 'About one year of GEDI measurements (2018–2020)'; },
+  credit: {
+    en: 'Image: NASA Scientific Visualization Studio (SVS 4950), visualizer Kel Elkins. Scientists: Temilola Fatoyinbo and Atticus Stovall. Data: GEDI.',
+    es: 'Imagen: NASA Scientific Visualization Studio (SVS 4950), visualizador Kel Elkins. Científicos: Temilola Fatoyinbo y Atticus Stovall. Datos: GEDI.',
+  },
+  whyMatters: {
+    en: 'Forest height helps scientists understand carbon and water cycles, biodiversity and habitat.',
+    es: 'La altura del bosque ayuda a entender los ciclos del carbono y el agua, la biodiversidad y el hábitat.',
+  },
+  whySounds() {
+    return es() ? 'Más claro en la imagen = árboles más altos = campana más aguda. Es un globo ya dibujado por NASA, iluminado y con alturas exageradas, así que solo se oye la altura relativa y no hay nombre de lugar.'
+      : 'Lighter in the picture = taller trees = higher bell. This is a globe already drawn by NASA, lit and with exaggerated heights, so only relative height is heard and there are no place names.';
+  },
+  facts: [
+    { en: 'GEDI is a laser (lidar) on the International Space Station that measures how tall plants are.', es: 'GEDI es un láser (lidar) en la Estación Espacial Internacional que mide la altura de las plantas.', src: 'NASA SVS 4950 page' },
+    { en: 'Each GEDI laser fires 242 times per second, lighting a spot about 25 meters wide.', es: 'Cada láser de GEDI dispara 242 veces por segundo e ilumina un punto de unos 25 metros.', src: 'NASA SVS 4950 page; NASA Earthdata GEDI articles' },
+    { en: 'Heights in this picture are exaggerated so you can see differences.', es: 'Las alturas de esta imagen están exageradas para ver las diferencias.', src: 'NASA SVS 4950 ("exaggerated to depict variation at this scale")' },
+    { en: 'Brown and dark green are short vegetation; bright green and white are tall.', es: 'El marrón y el verde oscuro son vegetación baja; el verde claro y el blanco, alta.', src: 'NASA SVS 4950 page and color bar' },
+  ],
+};
+
+// ---------------------------------------------------------------------------------
+// Lightning (density and rhythm, global view)
+// ---------------------------------------------------------------------------------
+export const LIGHTNING = {
+  phrase(s) {
+    if (s.level === 'many') return es() ? 'Aquí ocurren muchas tormentas.' : 'Many storms happen here.';
+    if (s.level === 'some') return es() ? 'Aquí caen algunos rayos.' : 'Some lightning strikes here.';
+    return es() ? 'No hay rayos aquí en esta imagen.' : 'No lightning events here in this picture.';
+  },
+  value(s) {
+    if (s.level === 'none') return es() ? 'Sin eventos cerca' : 'No events nearby';
+    const lv = s.density >= 0.66 ? 'level_high' : s.density >= 0.33 ? 'level_medium' : 'level_low';
+    return `${es() ? 'Densidad de eventos' : 'Event density'}: ${t(lv)} (${Math.round(1 + 7 * s.density)} ${es() ? 'golpes por segundo' : 'hits per second'})`;
+  },
+  shortValue() { return ''; },
+  sound(s) {
+    if (s.level === 'none') return es() ? 'Silencio: sin rayos cerca.' : 'Silence: no lightning nearby.';
+    return es() ? `Percusión, ${Math.round(1 + 7 * s.density)} golpes por segundo.` : `Percussion, ${Math.round(1 + 7 * s.density)} hits per second.`;
+  },
+  scaleLabel(s) {
+    const n = Math.round(1 + 7 * s.density);
+    return es() ? `${n} ${n === 1 ? 'golpe' : 'golpes'} por segundo` : `${n} ${n === 1 ? 'hit' : 'hits'} per second`;
+  },
+  range() { return es() ? 'De 1 a 8 golpes por segundo según cuántos rayos hay cerca (radio de 40 píxeles).' : 'From 1 to 8 hits per second, by how many lightning events are nearby (40-pixel radius).'; },
+  source() {
+    return es() ? 'NASA SVS 5011 · Lightning Imaging Sensor (LIS) en la Estación Espacial Internacional; datos del GHRC DAAC de NASA.'
+      : 'NASA SVS 5011 · Lightning Imaging Sensor (LIS) on the International Space Station; data from NASA GHRC DAAC.';
+  },
+  date() { return es() ? 'Una ventana de 10 días entre enero de 2017 y julio de 2023' : 'One 10-day window between January 2017 and July 2023'; },
+  credit: {
+    en: 'Image: NASA Scientific Visualization Studio (SVS 5011), visualizers Michala Garrison, Greg Shirah, Kel Elkins and Alex Kekesi. Data: ISS LIS, NASA GHRC DAAC.',
+    es: 'Imagen: NASA Scientific Visualization Studio (SVS 5011), visualizadores Michala Garrison, Greg Shirah, Kel Elkins y Alex Kekesi. Datos: ISS LIS, NASA GHRC DAAC.',
+  },
+  whyMatters: {
+    en: 'Knowing where lightning happens helps scientists study storms and how lightning interacts with the atmosphere.',
+    es: 'Saber dónde caen los rayos ayuda a estudiar las tormentas y cómo interactúa el rayo con la atmósfera.',
+  },
+  whySounds() {
+    return es() ? 'Cada golpe de percusión representa rayos cercanos: más puntos amarillos alrededor = ritmo más rápido. Es un globo ya dibujado por NASA, así que no hay nombre de lugar.'
+      : 'Each percussion hit stands for nearby lightning: more yellow dots around = faster rhythm. This is a globe already drawn by NASA, so there are no place names.';
+  },
+  facts: [
+    { en: 'A sensor on the International Space Station detects lightning in tropical and mid-latitude regions.', es: 'Un sensor en la Estación Espacial Internacional detecta rayos en regiones tropicales y de latitudes medias.', src: 'NASA SVS 5011 page' },
+    { en: 'Each yellow dot is a lightning event from a 10-day window between 2017 and 2023.', es: 'Cada punto amarillo es un rayo dentro de una ventana de 10 días entre 2017 y 2023.', src: 'NASA SVS 5011 ("a 10-day roving window", January 2017 to July 2023)' },
+    { en: 'Lightning maps show where storms are common and how they change with the seasons.', es: 'Los mapas de rayos muestran dónde son comunes las tormentas y cómo cambian con las estaciones.', src: 'NASA SVS 5011 ("seasonal patterns of lightning")' },
+  ],
+};
+
+// ---------------------------------------------------------------------------------
 // Shared helpers
 // ---------------------------------------------------------------------------------
 
-export const CONTENT = { air: AIR, lights: LIGHTS, ocean: OCEAN, aero: AEROC };
+export const CONTENT = { air: AIR, lights: LIGHTS, ocean: OCEAN, aero: AEROC, forest: FOREST, lightning: LIGHTNING };
 
 const factIndex = {};
 /** Rotate through the facts that apply to this sample. */

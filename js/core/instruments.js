@@ -3,7 +3,7 @@
 import { MIDI, midiToFreq, quantize } from './audio.js';
 
 /** Default length of a single tap, in seconds. */
-export const TAP_SECONDS = { air: 2.5, lights: 1.2, ocean: 3.0, aero: 2.5 };
+export const TAP_SECONDS = { air: 2.5, lights: 1.2, ocean: 3.0, aero: 2.5, forest: 2.5, lightning: 2.5 };
 
 /**
  * Play the sound for a sample. Returns true if something sounds, false for silence.
@@ -20,6 +20,54 @@ export function playSample(engine, s, opts = {}) {
 }
 
 const INSTRUMENTS = {
+  // Forest height (trend): low = soft low hum on C2, tall = high bell (C4..C6); blended.
+  forest(e, s, t0, dur, g) {
+    const h = Math.max(0, Math.min(1, s.height));
+    const v = e.voice(t0, dur);
+    v.out.gain.value = 1;
+    const hum = e.ctx.createGain();
+    hum.connect(v.out);
+    v.nodes.push(hum);
+    e.env(hum.gain, t0, dur, { attack: 0.08, decay: 0.3, peak: 0.5 * (1 - h) * g + 0.04, sustain: 0.85, release: Math.min(0.4, dur * 0.4) });
+    const lp = e.filter('lowpass', 220, 0.5, hum);
+    v.nodes.push(lp);
+    v.sources.push(e.osc('sine', midiToFreq(MIDI.C2), t0, t0 + dur, lp));
+    v.sources.push(e.osc('triangle', midiToFreq(MIDI.C2), t0, t0 + dur, lp, 4));
+    if (h > 0.05) {
+      const f = midiToFreq(quantize(h, MIDI.C4, MIDI.C6));
+      bell(e, v, f, t0, Math.min(1.6, dur), 0.32 * h * g + 0.03);
+      if (dur > 2) bell(e, v, f, t0 + 1.2, Math.min(1.2, dur - 1.2), 0.22 * h * g + 0.02);
+    }
+    return true;
+  },
+
+  // Lightning (density and rhythm): one percussion hit per event cluster, 1..8 hits per
+  // second by density, with a small random timing variation. Zero density = silence.
+  lightning(e, s, t0, dur, g) {
+    const d = Math.max(0, Math.min(1, s.density));
+    if (d <= 0) return false;
+    const rate = 1 + 7 * d;
+    const v = e.voice(t0, dur);
+    v.out.gain.value = 1;
+    let t = t0;
+    while (t < t0 + dur - 0.1) {
+      const hit = e.ctx.createGain();
+      hit.connect(v.out);
+      v.nodes.push(hit);
+      e.perc(hit.gain, t, 0.55 * g, 0.04);
+      const bp = e.filter('bandpass', 800, 1.2, hit);
+      v.nodes.push(bp);
+      v.sources.push(e.noise(t, t + 0.08, bp));
+      const thump = e.ctx.createGain();
+      thump.connect(v.out);
+      v.nodes.push(thump);
+      e.perc(thump.gain, t, 0.6 * g, 0.12);
+      v.sources.push(e.osc('sine', 80, t, t + 0.16, thump));
+      t += (1 / rate) * (0.85 + Math.random() * 0.3);
+    }
+    return true;
+  },
+
   // Air temperature: -40..+40 degC -> pentatonic C3..C6 (cold = low, hot = high).
   air(e, s, t0, dur, g) {
     const midi = quantize(s.norm, MIDI.C3, MIDI.C6);
@@ -106,9 +154,9 @@ const AERO = {
   // Black carbon: low pulsed marimba-like note on A2, 0.6 s decay, repeating.
   blackcarbon(e, t0, dur, vol) {
     const f = midiToFreq(MIDI.A2);
+    const v = e.voice(t0, dur);
+    v.out.gain.value = 1;
     for (let t = t0; t < t0 + dur - 0.2; t += 0.6) {
-      const v = e.voice(t, 0.65);
-      v.out.gain.value = 1;
       [[1, 0.7], [4, 0.18], [9.2, 0.05]].forEach(([ratio, amp]) => {
         const g = e.ctx.createGain();
         g.connect(v.out);
