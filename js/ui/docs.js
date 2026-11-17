@@ -81,6 +81,8 @@ export function howToHTML() {
     <p>The "What you hear" panel is announced after each sound. Everything the app says aloud is also written on screen.</p>`;
 }
 
+const REPO = 'https://github.com/LuisLazaroMachado/earth-is-speaking';
+
 export function aboutHTML(metas = {}) {
   const v = (id, k, d = '—') => (metas[id] && metas[id].validation && metas[id].validation[k] !== undefined ? metas[id].validation[k] : d);
   const label = metas.air ? metas.air.frame_label : '';
@@ -109,6 +111,10 @@ export function aboutHTML(metas = {}) {
       <p>NASA SVS 5011, Lightning Imaging Sensor (LIS) en la Estación Espacial Internacional, datos del GHRC DAAC de NASA. Cada punto amarillo es un evento dentro de una ventana de 10 días (enero 2017–julio 2023), no un destello único. Al tocar, contamos los puntos amarillos en un radio de 40 píxeles; la densidad fija el ritmo (1 a 8 golpes por segundo). Los archivos originales exigen iniciar sesión en NASA Earthdata y son decenas de miles, así que no se usan.</p>
       <h3>Por qué dos capas no se escuchan por lugar</h3>
       <p>La altura del bosque y los rayos solo existen como globos ya dibujados por NASA con la cámara fija. En una imagen en perspectiva no hay latitud ni longitud fiables, así que la app no da país ni coordenadas en esas capas y ofrece escuchar el lugar en otra capa.</p>
+      <h3>Globo 3D</h3>
+      <p>El globo usa la misma imagen de NASA que el mapa, con los píxeles sin suavizar para que se vean los datos, y el mismo motor: tocar un punto del globo da la misma latitud, longitud y sonido que en el mapa. Solo en la textura del globo se taparon las leyendas, logotipos y fechas con colores vecinos, para que no parezcan datos. El globo nunca es la única vía: todo se puede hacer en el mapa o con el teclado.</p>
+      <h3>Capas que no se incluyen</h3>
+      <p>El CO₂ (se dibuja como opacidad volumétrica, que no se puede convertir en valores fiables) y la salinidad no forman parte de la app.</p>
       <h3>Límites</h3>
       <ul><li>Cada píxel mide unos 20 km: la app nunca finge más precisión. Los lugares que caben en uno o dos píxeles se anuncian como "área de unos 20 km".</li>
       <li>La temperatura es aproximada (± unos pocos °C), con extremos de escala (−40 °C o menos, 40 °C o más).</li>
@@ -116,12 +122,17 @@ export function aboutHTML(metas = {}) {
       <li>Toda media y porcentaje por país se pondera por cos(latitud), porque en un mapa plano los píxeles cerca de los polos cubren menos superficie. Hasta 24 puntos por país, repartidos de forma uniforme en área.</li></ul>
       <h3>Privacidad</h3>
       <p>Sin cuentas ni seguimiento. El navegador guarda solo el idioma, el volumen, la velocidad, las opciones y el modo. El reconocimiento de voz de Chrome envía el audio a un servicio en la nube de Google; el micrófono solo se activa cuando pulsas el botón o la tecla V.</p>
-      <h3>Accesibilidad</h3>
-      <p>Diseñada primero para personas ciegas y con baja visión, pero todavía no se probó con ellas. Agradecemos sus comentarios.</p>
+      <h3>Declaración de accesibilidad</h3>
+      <p>Diseñada primero para personas ciegas y con baja visión: todo funciona con teclado, con lector de pantalla, por voz (Chrome) y en modo solo audio, con texto en pantalla para todo lo que suena o se dice. Pruebas automáticas: axe-core en 38 estados de la app (inglés, español, escritorio y móvil) sin infracciones WCAG 2.2 AA; Lighthouse 100 en accesibilidad; contraste medido sobre el fondo real de 119 textos, el más bajo 5,27:1 (mínimo exigido 4,5:1); ningún texto por debajo de 16 px salvo el crédito decorativo de las tarjetas.</p>
+      <p><strong>Todavía no se probó con personas ciegas o con baja visión.</strong> Es nuestro siguiente paso, con asociaciones de Lima, y agradecemos sus comentarios. <a href="${REPO}/blob/main/docs/accessibility-audit.md" target="_blank" rel="noopener">Informe de accesibilidad</a> · <a href="${REPO}/blob/main/docs/guia-prueba-nvda.md" target="_blank" rel="noopener">Guía de prueba con NVDA y usuarios</a></p>
       <h3>Impacto local: Lima, Perú</h3>
       <p>En el Perú, 1 550 196 personas declararon una dificultad permanente para ver, aun usando anteojos (INEI, Censo 2017). La app está en español y en inglés, incluye ciudades y zonas del Perú en la búsqueda, y cuenta historias de la costa peruana, como la fría corriente de Humboldt que mantiene fresca y neblinosa a Lima.</p>
+      <h3>Datos curiosos verificados</h3>
+      <p>Cada "¿Sabías que?" se contrastó con una página de NASA o una fuente científica estable; los que no se pudieron verificar se quitaron (por ejemplo, una temperatura de la corriente de Kuroshio). <a href="${REPO}/blob/main/docs/facts.md" target="_blank" rel="noopener">Lista de datos y fuentes</a></p>
+      <h3>Uso de inteligencia artificial</h3>
+      <p>El código, los scripts de preparación de datos y los textos se escribieron con ayuda de un asistente de IA (Claude, de Anthropic), dirigido, revisado y probado por el equipo. El sonido no usa IA: son reglas fijas. Ninguna imagen, audio o dato de la app fue generado por IA: las imágenes son de NASA y el sonido se sintetiza en tu navegador.</p>
       <h3>Créditos</h3>
-      <p>NASA Scientific Visualization Studio y los visualizadores y científicos citados en cada capa; NASA Global Modeling and Assimilation Office (GMAO); ECCO (NASA/JPL, MIT); Black Marble (Suomi NPP VIIRS); GEDI; ISS LIS (GHRC DAAC); Natural Earth (dominio público). Earth Is Speaking es un proyecto independiente hecho para el NASA Space Apps Challenge 2026.</p>`;
+      <p>NASA Scientific Visualization Studio y los visualizadores y científicos citados en cada capa; NASA Global Modeling and Assimilation Office (GMAO); ECCO (NASA/JPL, MIT); Black Marble (Suomi NPP VIIRS); GEDI; ISS LIS (GHRC DAAC); Natural Earth (dominio público); Three.js (licencia MIT). Earth Is Speaking es un proyecto independiente hecho para el NASA Space Apps Challenge 2026 y no está respaldado por NASA. <a href="${REPO}" target="_blank" rel="noopener">Código y scripts en GitHub</a></p>`;
   }
   return `
     <h3>How it works</h3>
@@ -145,6 +156,10 @@ export function aboutHTML(metas = {}) {
     <p>NASA SVS 5011, Lightning Imaging Sensor (LIS) on the International Space Station, data from NASA GHRC DAAC. Each yellow dot is an event within a 10-day window (January 2017–July 2023), not a single flash. On a tap we count yellow dots within a 40-pixel radius; the density sets the rhythm (1 to 8 hits per second). The original files require a NASA Earthdata login and number in the tens of thousands, so they are not used.</p>
     <h3>Why two layers can't be heard by place</h3>
     <p>Forest height and lightning only exist as globes already drawn by NASA with a fixed camera. A perspective picture has no reliable latitude or longitude, so the app gives no country or coordinates for these layers and offers to hear the place in another layer.</p>
+    <h3>3D globe</h3>
+    <p>The globe uses the same NASA picture as the map, with unsmoothed pixels so the data stays visible, and the same engine: tapping a point on the globe gives the same latitude, longitude and sound as on the map. Only on the globe texture were legends, logos and dates covered with neighboring colors, so they don't look like data. The globe is never the only way: everything can be done on the map or with the keyboard.</p>
+    <h3>Layers not included</h3>
+    <p>CO₂ (drawn as volumetric opacity, which cannot be turned into reliable values) and salinity are not part of the app.</p>
     <h3>Limits</h3>
     <ul><li>Each pixel covers about 20 km: the app never pretends to be more precise. Places that fit in one or two pixels are announced as an "area of about 20 km".</li>
     <li>Temperature is approximate (± a few °C), with scale ends (−40 °C or colder, 40 °C or more).</li>
@@ -152,10 +167,15 @@ export function aboutHTML(metas = {}) {
     <li>Every country mean and percentage is weighted by cos(latitude), because on a flat map the pixels near the poles cover less surface. Up to 24 points per country, spread evenly by area.</li></ul>
     <h3>Privacy</h3>
     <p>No accounts and no tracking. The browser only stores your language, volume, speed, options and mode. Chrome's speech recognition sends the audio to a Google cloud service; the microphone is only used when you press the button or the V key.</p>
-    <h3>Accessibility</h3>
-    <p>Designed first for blind and low-vision people, but not yet tested with them. We welcome feedback.</p>
+    <h3>Accessibility statement</h3>
+    <p>Designed first for blind and low-vision people: everything works with the keyboard, with a screen reader, by voice (Chrome) and in audio-only mode, with on-screen text for everything that sounds or is spoken. Automated tests: axe-core on 38 app states (English, Spanish, desktop and mobile) with no WCAG 2.2 AA violations; Lighthouse accessibility 100; contrast measured on the real background of 119 text elements, lowest 5.27:1 (minimum required 4.5:1); no text below 16 px except the decorative card credit.</p>
+    <p><strong>Not yet tested with blind or low-vision people.</strong> That is our next step, with associations in Lima, and we welcome feedback. <a href="${REPO}/blob/main/docs/accessibility-audit.md" target="_blank" rel="noopener">Accessibility report</a> · <a href="${REPO}/blob/main/docs/guia-prueba-nvda.md" target="_blank" rel="noopener">NVDA and user test guide (Spanish)</a></p>
     <h3>Local impact: Lima, Peru</h3>
     <p>In Peru, 1,550,196 people reported a permanent difficulty seeing, even with glasses (INEI, 2017 Census). The app speaks Spanish and English, includes Peruvian cities and areas in its search, and tells stories from Peru's coast, such as the cold Humboldt Current that keeps Lima cool and foggy.</p>
+    <h3>Verified facts</h3>
+    <p>Every "Did you know?" was checked against a NASA page or a stable scientific source; facts that could not be verified were removed (for example, a temperature for the Kuroshio Current). <a href="${REPO}/blob/main/docs/facts.md" target="_blank" rel="noopener">List of facts and sources</a></p>
+    <h3>Use of artificial intelligence</h3>
+    <p>The code, data-preparation scripts and texts were written with the help of an AI assistant (Claude, by Anthropic), directed, reviewed and tested by the team. The sound does not use AI: it follows fixed rules. No image, audio or data in the app was generated by AI: the pictures are NASA's and the sound is synthesized in your browser.</p>
     <h3>Credits</h3>
-    <p>NASA Scientific Visualization Studio and the visualizers and scientists credited on each layer; NASA Global Modeling and Assimilation Office (GMAO); ECCO (NASA/JPL, MIT); Black Marble (Suomi NPP VIIRS); GEDI; ISS LIS (GHRC DAAC); Natural Earth (public domain). Earth Is Speaking is an independent project made for the NASA Space Apps Challenge 2026.</p>`;
+    <p>NASA Scientific Visualization Studio and the visualizers and scientists credited on each layer; NASA Global Modeling and Assimilation Office (GMAO); ECCO (NASA/JPL, MIT); Black Marble (Suomi NPP VIIRS); GEDI; ISS LIS (GHRC DAAC); Natural Earth (public domain); Three.js (MIT license). Earth Is Speaking is an independent project made for the NASA Space Apps Challenge 2026 and is not endorsed by NASA. <a href="${REPO}" target="_blank" rel="noopener">Code and scripts on GitHub</a></p>`;
 }

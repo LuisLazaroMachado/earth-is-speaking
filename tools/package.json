@@ -11,6 +11,7 @@
   "description": "",
   "dependencies": {
     "axe-core": "^4.10.2",
+    "lighthouse": "^12.3.0",
     "puppeteer-core": "^23.11.1"
   }
 }

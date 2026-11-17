@@ -23,12 +23,13 @@
 }
 
 * { box-sizing: border-box; }
+html { font-size: 18px; } /* 1rem = 18px: no text below 16px */
 html, body { height: 100%; }
 body {
   margin: 0;
   background: var(--deep);
   color: var(--text);
-  font: 18px/1.5 var(--font);
+  font: 1rem/1.5 var(--font);
   -webkit-font-smoothing: antialiased;
 }
 [hidden] { display: none !important; }
@@ -131,7 +132,7 @@ button, input, select { font: inherit; color: inherit; }
 
 .layout {
   flex: 1; display: grid; grid-template-columns: 320px minmax(0, 1fr) 360px; gap: 0;
-  padding-bottom: 84px; /* room for the fixed control bar */
+  padding-bottom: calc(var(--bar-h, 84px) + 8px); /* room for the fixed control bar */
 }
 
 /* layer cards */
@@ -150,11 +151,12 @@ button, input, select { font: inherit; color: inherit; }
   background: var(--electric); color: #fff;
 }
 .card-bg { position: absolute; inset: 0; background-size: cover; background-position: center; opacity: 0.55; }
-.card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7, 23, 63, 0.92) 0%, rgba(7, 23, 63, 0.78) 55%, rgba(7, 23, 63, 0.45) 100%); }
+/* overlay never below 76 % opacity: light text keeps >= 4.5:1 even over a white part of the picture */
+.card::after { content: ""; position: absolute; inset: 0; background: linear-gradient(90deg, rgba(7, 23, 63, 0.94) 0%, rgba(7, 23, 63, 0.86) 55%, rgba(7, 23, 63, 0.76) 100%); }
 .card > *:not(.card-bg) { position: relative; z-index: 1; }
 .card .icon { width: 34px; height: 34px; grid-row: span 3; color: var(--yonder); margin-top: 2px; }
 .card-name { font-weight: 700; font-size: 1.08rem; }
-.card-badge { justify-self: start; font-size: 0.82rem; font-weight: 600; padding: 1px 10px; border-radius: 999px; background: rgba(46, 150, 245, 0.22); border: 1px solid var(--yonder); color: #fff; }
+.card-badge { justify-self: start; font-size: 0.9rem; font-weight: 600; padding: 1px 10px; border-radius: 999px; background: rgba(46, 150, 245, 0.22); border: 1px solid var(--yonder); color: #fff; }
 .card-desc { font-size: 0.95rem; color: var(--muted); }
 .card-credit { position: absolute !important; right: 10px; bottom: 3px; font-size: 0.68rem; color: rgba(255, 255, 255, 0.7); z-index: 1; }
 .card[aria-current="true"] { border-color: var(--yellow); box-shadow: 0 0 0 2px rgba(234, 239, 7, 0.35); }
@@ -242,7 +244,7 @@ kbd { background: var(--deep); border: 1px solid var(--yonder); border-radius: 6
   .layout { grid-template-columns: 270px minmax(0, 1fr) 310px; }
 }
 @media (max-width: 960px) {
-  body { font-size: 17px; }
+  body { font-size: 1rem; }
   .topbar { padding: 8px 12px; flex-wrap: wrap; row-gap: 6px; }
   .data-nasa { display: none; }
   .app-name { font-size: 1.15rem; }
@@ -280,7 +282,9 @@ kbd { background: var(--deep); border: 1px solid var(--yonder); border-radius: 6
 }
 @media (max-width: 520px) {
   .welcome-top { padding: 12px 16px; }
-  .top-actions .btn-small { padding: 6px 12px; font-size: 0.95rem; }
+  .top-actions .btn-small { padding: 4px 10px; font-size: 0.9rem; min-height: 44px; }
+  .top-actions { gap: 4px; }
+  .nasa-slot.small { display: none; }
   .lang-switch button { min-width: 44px; }
 }
 
@@ -366,3 +370,19 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 .globe-cross::before, .globe-cross::after { content: ""; position: absolute; background: var(--yellow); }
 .globe-cross::before { left: 50%; top: -9px; bottom: -9px; width: 2px; margin-left: -1px; }
 .globe-cross::after { top: 50%; left: -9px; right: -9px; height: 2px; margin-top: -1px; }
+
+/* ---------- compact toolbar on phones: 3 rows, map higher on the screen ---------- */
+@media (max-width: 520px) {
+  .stage-toolbar { gap: 8px; }
+  .stage-toolbar .view-switch { order: 1; }
+  .stage-toolbar .zoom { order: 2; margin-left: auto; }
+  .stage-toolbar .toolbar-spacer { display: none; }
+  .stage-toolbar .search { order: 3; width: 100%; flex-wrap: nowrap; }
+  .stage-toolbar .search .combo { flex: 1; min-width: 0; }
+  .stage-toolbar .search .combo input { width: 100%; }
+  .stage-toolbar #btn-surprise { order: 4; }
+  .stage-toolbar #btn-journey2 { order: 5; }
+  #btn-mic { min-width: 44px; padding: 6px 10px; }
+  #btn-mic span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .view-switch button, .view-switch span { padding: 6px 14px; }
+}

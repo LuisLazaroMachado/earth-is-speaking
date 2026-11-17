@@ -301,7 +301,7 @@ export const OCEAN = {
     { en: 'The Gulf Stream can flow at up to about 9 kilometers per hour (2.5 meters per second) at the surface.', es: 'La Corriente del Golfo puede fluir hasta a unos 9 kilómetros por hora (2,5 metros por segundo) en la superficie.',
       src: 'NOAA Ocean Service, "How fast is the Gulf Stream?" (maximum about 9 km/h, 5.6 mph)' },
     { en: 'Agulhas rings, giant swirls of warm water, can last more than 2 years.', es: 'Los anillos de Agulhas, enormes remolinos de agua cálida, pueden durar más de 2 años.',
-      src: 'Satellite altimetry studies: about 3-4 years in the South Atlantic (Byrne et al. 1995); one ring tracked for about 2 years (Froyland et al. 2015)' },
+      src: 'Satellite-altimetry studies: average crossing of the South Atlantic about 3.5 years; one ring tracked as a coherent body for about 2 years (Froyland et al. 2015, "Studying an Agulhas ring’s long-term pathway and decay with finite-time coherent sets")' },
     { en: 'Ocean currents carry heat around the planet.', es: 'Las corrientes del océano llevan calor por todo el planeta.', src: 'NASA SVS 5479 (Gulf Stream carries heat to northern latitudes)' },
     { en: 'These swirls come from a model that uses spacecraft and buoy observations.', es: 'Estos remolinos salen de un modelo que usa observaciones de naves y boyas.',
       src: 'NASA SVS 5479 ("observations from spacecraft, buoys, and other in situ measurements")' },

@@ -18,3 +18,7 @@ Thumbs.db
 tools/node_modules/
 tools/shot_*.png
 tools/downloads-*/
+tools/lighthouse-report.json
+tools/audit-result.json
+tools/contrast-result.json
+tools/ct_fail_*.png
