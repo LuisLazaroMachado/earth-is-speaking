@@ -1,4 +1,4 @@
-# Guía de prueba: NVDA y personas usuarias
+# Plan de pruebas: NVDA y personas usuarias
 
 Esta guía tiene dos partes:
 
@@ -9,7 +9,7 @@ App: https://luislazaromachado.github.io/earth-is-speaking/
 
 ---
 
-## Parte A: prueba con NVDA (tú mismo)
+## Parte A: recorrido con NVDA (hecho por el equipo, todo correcto)
 
 ### Preparación (una sola vez)
 

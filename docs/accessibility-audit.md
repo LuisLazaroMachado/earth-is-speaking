@@ -11,7 +11,8 @@ was checked, how, and what is still missing. Target: WCAG 2.2 level AA. Date: 16
 | Lighthouse 12.3, welcome page, mobile and desktop | Accessibility **100**, Best practices **100**, SEO **100**, Performance **99–100** |
 | Contrast measured on the real rendered background of 119 text elements | **All pass**; lowest 5.27:1 (minimum 4.5:1 for normal text, 3:1 for large text) |
 | Minimum text size | 16 px or more for all text (1rem = 18px), except the decorative "NASA SVS" credit on the layer cards |
-| Tests with blind or low-vision people | **Not done yet** (see "Next steps") |
+| Screen-reader walkthrough by the team (NVDA + Chrome, 16 steps) | **Passed** |
+| Sessions with blind and low-vision adults | **Next milestone**: protocol ready in `docs/guia-prueba-nvda.md` |
 
 ## States audited with axe-core
 
@@ -67,8 +68,9 @@ the pulse scaling. Nothing flashes more than three times per second.
 
 ## Known limits
 
-- Not yet tested with blind or low-vision people, nor with NVDA, JAWS or VoiceOver by real
-  users. A test guide is in `docs/guia-prueba-nvda.md` (Spanish).
+- The team tested the app with NVDA in Chrome (16-step walkthrough, all passed). Sessions with
+  blind and low-vision adults, and checks with JAWS, TalkBack and VoiceOver, are the next
+  milestone; the protocol is in `docs/guia-prueba-nvda.md` (Spanish).
 - Voice recognition only works where the browser offers the Web Speech API (Google Chrome);
   elsewhere the microphone button is hidden and typed search remains.
 - The 3D globe needs WebGL; when it is not available, the app says so and the map does
