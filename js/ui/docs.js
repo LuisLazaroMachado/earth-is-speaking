@@ -15,6 +15,7 @@ const SHORTCUTS = [
   [['R'], 'Repeat the last spoken message', 'Repetir el último mensaje hablado'],
   [['V'], 'Speak a place or a command (Google Chrome)', 'Decir un lugar o un comando (Google Chrome)'],
   [['P'], 'Play My Earth Song', 'Reproducir Mi canción de la Tierra'],
+  [['G'], 'Switch between Map and 3D Globe', 'Cambiar entre Mapa y Globo 3D'],
   [['H'], 'Open this list of shortcuts', 'Abrir esta lista de atajos'],
   [['Esc'], 'Close a dialog', 'Cerrar un diálogo'],
 ];

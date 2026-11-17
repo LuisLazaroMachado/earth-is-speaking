@@ -50,7 +50,7 @@ const air = makeLayer({
 // ---------------------------------------------------------------------------------
 const lights = makeLayer({
   id: 'lights', num: 2, type: 'trend', place: true, globe: true, view: 'map',
-  image: 'data/lights/map.jpg',
+  image: 'data/lights/map.jpg', texture: 'data/lights/texture.jpg',
   gridUrl: 'data/lights/grid.png', metaUrl: 'data/lights/meta.json',
 
   decode(code) {
@@ -73,7 +73,7 @@ const lights = makeLayer({
 // ---------------------------------------------------------------------------------
 const ocean = makeLayer({
   id: 'ocean', num: 3, type: 'trend', place: true, coastal: true, globe: true, view: 'map',
-  image: 'data/ocean/map.jpg',
+  image: 'data/ocean/map.jpg', texture: 'data/ocean/texture.jpg',
   gridUrl: 'data/ocean/grid.png', metaUrl: 'data/ocean/meta.json',
 
   decode(code) {
@@ -97,7 +97,7 @@ const ocean = makeLayer({
 export const AERO_CATS = [null, 'blackcarbon', 'dust', 'seasalt', 'sulfate'];
 const aero = makeLayer({
   id: 'aero', num: 4, type: 'category', place: true, globe: true, view: 'map',
-  image: 'data/aero/map.jpg',
+  image: 'data/aero/map.jpg', texture: 'data/aero/texture.jpg',
   gridUrl: 'data/aero/grid.png', metaUrl: 'data/aero/meta.json',
 
   sample(lat, lon) {

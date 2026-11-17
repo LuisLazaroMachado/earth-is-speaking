@@ -4,6 +4,7 @@ import { engine } from './core/audio.js';
 import { playSample } from './core/instruments.js';
 import { LAYERS } from './core/layers.js';
 import { MapView } from './views/mapView.js';
+import { ViewHub } from './views/viewHub.js';
 import { speak, lastUtterance, cancelSpeech, speechAvailable } from './core/speech.js';
 import { initLang, setLang, getLang, t, L, applyI18n, onLangChange, fmtLatLon } from './i18n.js';
 import { CONTENT, CARDS, icon, typeLabel, nextFact } from './content.js';
@@ -87,7 +88,7 @@ export function audible(s) {
 // ---------------------------------------------------------------------------------
 // Map view
 // ---------------------------------------------------------------------------------
-const view = new MapView($('map'), {
+const viewCallbacks = {
   onPress(lat, lon) {
     engine.stopAll();
     hideSummary();
@@ -130,7 +131,23 @@ const view = new MapView($('map'), {
     present(s, { announceIt: true });
     songApi.add({ layer: state.layerId, lat, lon });
   },
-});
+};
+const mapView = new MapView($('map'), viewCallbacks);
+/** Both views behind one interface: Map and Globe share the layer, markers and selection. */
+const view = new ViewHub(mapView, $('globe'), viewCallbacks);
+
+/** Switch between the flat map and the 3D globe (flat layers only). */
+async function setViewMode(mode) {
+  if (mode === 'globe' && layer().view === 'global') return;
+  const ok = await view.setMode(mode);
+  if (!ok) { say(t('globe_error')); return; }
+  store.set('viewMode', mode);
+  renderLayerInfo();
+  if (view.temp) view.setCursor(view.temp.lat, view.temp.lon);
+  if (state.audioOnly) engine.tick();
+  announce(`${mode === 'globe' ? t('globe_on') : t('map_on')} ${mode === 'globe' ? t('globe_help') : ''}`);
+  view.focus();
+}
 
 // ---------------------------------------------------------------------------------
 // Information panel
@@ -178,12 +195,18 @@ function renderLayerInfo() {
   $('map-credit').textContent = L(c.credit);
   $('map').setAttribute('aria-label', t('map_label', { layer: layerName(state.layerId) }));
   $('stage-h').textContent = layerName(state.layerId);
+  $('globe').setAttribute('aria-label', t('globe_label', { layer: layerName(state.layerId) }));
   const vs = $('view-switch');
   const global = layer().view === 'global';
-  vs.setAttribute('aria-label', global ? t('view_global') : t('view_map'));
-  vs.innerHTML = `<span>${global ? t('view_global') : t('view_map')}</span>`;
+  const globe = view.mode === 'globe';
+  vs.setAttribute('aria-label', global ? t('view_global') : `${t('view_map')} / ${t('view_globe')}`);
+  if (global) vs.innerHTML = `<span>${t('view_global')}</span>`;
+  else {
+    vs.innerHTML = `<button type="button" data-mode="map" aria-pressed="${!globe}">${t('view_map')}</button><button type="button" data-mode="globe" aria-pressed="${globe}">${t('view_globe')}</button>`;
+    vs.querySelectorAll('button').forEach((b) => b.addEventListener('click', () => setViewMode(b.dataset.mode)));
+  }
   document.querySelector('.zoom').hidden = global;
-  $('map-help').textContent = global ? `${t('global_hint')} ${t('map_help')}` : t('map_help');
+  $('map-help').textContent = global ? `${t('global_hint')} ${t('map_help')}` : (globe ? t('globe_help') : t('map_help'));
   const banner = $('latest-banner');
   banner.hidden = !state.latest;
   if (state.latest && meta) banner.textContent = `${t('latest_label')}: ${meta.frame_label}`;
@@ -259,7 +282,8 @@ export async function selectLayer(id, { latest = false, quiet = false, keepRuns 
     state.last = null;
     state.summary = null;
   }
-  const ok = await view.setImage(L1.image);
+  if (isGlobal && view.mode === 'globe') await view.setMode('map');
+  const ok = await view.setImage(L1.image, L1.texture || L1.image);
   $('map-error').hidden = ok;
   renderLayerInfo();
   if (state.last) {
@@ -649,7 +673,7 @@ async function showExplorer({ focusMap = true } = {}) {
   await selectLayer(state.layerId, { latest: state.latest, quiet: true });
   measureBar();
   view.resize();
-  if (focusMap) $('map').focus();
+  if (focusMap) view.focus();
   announce(`${layerName(state.layerId)}. ${t('map_help')}`);
 }
 
@@ -728,8 +752,9 @@ document.addEventListener('keydown', (e) => {
   else if (k === 'v' || k === 'V') voiceFlow();
   else if (k === 'p' || k === 'P') songApi.playAll();
   else if (k === '/') { e.preventDefault(); $('search').focus(); }
-  else if ((k === '+' || k === '=') && e.target !== $('map')) view.zoomBy(2);
-  else if ((k === '-' || k === '_') && e.target !== $('map')) view.zoomBy(0.5);
+  else if ((k === '+' || k === '=') && !e.target.closest('.map')) view.zoomBy(2);
+  else if ((k === '-' || k === '_') && !e.target.closest('.map')) view.zoomBy(0.5);
+  else if (k === 'g' || k === 'G') { if (layer().view !== 'global') setViewMode(view.mode === 'globe' ? 'map' : 'globe'); }
 });
 
 // ---------------------------------------------------------------------------------
@@ -787,7 +812,8 @@ const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
   if (lvl > 0.02) {
     const r = view.canvas.getBoundingClientRect();
     const dpr = view.canvas.width / (r.width || 1);
-    const { x, y } = view.toXY(pulsePoint.lat, pulsePoint.lon);
+    const xy = view.toXY(pulsePoint.lat, pulsePoint.lon) || { x: -999, y: -999 };
+    const { x, y } = xy;
     el.style.left = `${x / dpr}px`;
     el.style.top = `${y / dpr}px`;
     el.style.opacity = String(Math.min(1, 0.35 + lvl));
@@ -931,13 +957,13 @@ function endJourney(finished) {
   if (finished) {
     speak(t('journey_done'), getLang());
     announce(t('journey_done'));
-    $('map').focus();
+    view.focus();
   }
 }
 
 $('j-next').addEventListener('click', () => goStop(Math.min(STOPS.length - 1, journey.i + 1)));
 $('j-back').addEventListener('click', () => goStop(Math.max(0, journey.i - 1)));
-$('j-end').addEventListener('click', () => { engine.stopAll(); cancelSpeech(); endJourney(false); $('map').focus(); });
+$('j-end').addEventListener('click', () => { engine.stopAll(); cancelSpeech(); endJourney(false); view.focus(); });
 $('btn-journey').addEventListener('click', () => startJourney(0));
 $('btn-journey2').addEventListener('click', () => startJourney(0));
 $('btn-options').addEventListener('click', () => openDialog('dlg-options'));
@@ -1148,4 +1174,4 @@ LAYERS.air.load().catch(() => {});
 geo.load().then(initSearch).catch((e) => console.error(e));
 
 // test hook for the headless checks
-window.__eis = { state, engine, selectLayer, goTo, LAYERS, geo, hearCountry, summarize, searchPlaces, handleVoice, setAudioOnly, songApi };
+window.__eis = { state, engine, selectLayer, goTo, LAYERS, geo, hearCountry, summarize, searchPlaces, handleVoice, setAudioOnly, songApi, view };

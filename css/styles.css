@@ -356,3 +356,13 @@ kbd { background: var(--deep); border: 1px solid var(--yonder); border-radius: 6
 .share-out input { min-height: 44px; border-radius: 10px; border: 2px solid var(--yonder); background: var(--deep-2); color: #fff; padding: 6px 10px; width: 100%; }
 .share-note { background: rgba(234, 239, 7, 0.12); border: 2px solid var(--yellow); border-radius: 12px; padding: 10px 16px; max-width: 640px; font-weight: 600; }
 button:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---------- 3D globe ---------- */
+.viewport { position: relative; }
+.globe-view canvas { cursor: grab; }
+.globe-view canvas:active { cursor: grabbing; }
+.globe-cross { position: absolute; left: 50%; top: 50%; width: 30px; height: 30px; margin: -15px 0 0 -15px; pointer-events: none;
+  border: 2px solid var(--yellow); border-radius: 50%; box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.7); }
+.globe-cross::before, .globe-cross::after { content: ""; position: absolute; background: var(--yellow); }
+.globe-cross::before { left: 50%; top: -9px; bottom: -9px; width: 2px; margin-left: -1px; }
+.globe-cross::after { top: 50%; left: -9px; right: -9px; height: 2px; margin-top: -1px; }

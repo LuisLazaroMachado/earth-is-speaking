@@ -112,10 +112,16 @@
             <button type="button" class="btn btn-secondary btn-small" id="j-end" data-i18n="journey_end_btn">End the journey</button>
           </div>
         </section>
-        <div id="map" class="map" tabindex="0" role="application" aria-describedby="map-help">
-          <canvas></canvas>
+        <div class="viewport">
+          <div id="map" class="map" tabindex="0" role="application" aria-describedby="map-help">
+            <canvas></canvas>
+            <p class="map-error" id="map-error" hidden data-i18n="img_error"></p>
+          </div>
+          <div id="globe" class="map globe-view" tabindex="0" role="application" aria-describedby="map-help" hidden>
+            <canvas></canvas>
+            <span class="globe-cross" aria-hidden="true"></span>
+          </div>
           <div class="pulse" id="pulse" aria-hidden="true"></div>
-          <p class="map-error" id="map-error" hidden data-i18n="img_error"></p>
         </div>
         <p id="map-help" class="map-help" data-i18n="map_help"></p>
         <p class="sound-line" aria-hidden="true"><span class="label" data-i18n="sound_desc">Sound</span><span id="sound-desc"></span></p>
